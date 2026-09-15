@@ -1,3 +1,36 @@
+privacyfox (0.2.1) unstable; urgency=high
+
+  * Real correctness bug found and fixed, worked through together:
+    policies.json was being installed to
+    <librewolf install dir>/distribution/policies.json -- confirmed via
+    dpkg -S that this path is real content the librewolf .deb itself
+    ships, and confirmed via dpkg-query that it is NOT a registered
+    conffile. That means it had zero protection from dpkg: the next
+    ordinary "apt upgrade" pulling a newer librewolf version would
+    have silently overwritten it back to LibreWolf's stock file,
+    quietly undoing every bit of this project's hardening with no
+    warning at all.
+
+    Fixed by switching to /etc/librewolf/policies/policies.json --
+    the other real location Firefox's policy engine reads (confirmed
+    from Mozilla's own docs), genuinely unclaimed by any package
+    (confirmed: /etc/librewolf didn't exist before this ran). Nothing
+    else can ever silently clobber it again.
+
+  * Added a real postrm maintainer script. Purging the package
+    (apt purge privacyfox, not plain remove -- standard Debian
+    convention, matches "remove keeps state for a possible reinstall,
+    purge means get rid of everything") now actually deletes
+    policies.json and any backups, cleanly reverting LibreWolf to its
+    own stock, unhardened behavior. Previously there was no removal
+    script at all -- purging left the system policy behind forever.
+
+  * postinst simplified as a side effect -- no longer needs to detect
+    where LibreWolf is installed at all, since the target path doesn't
+    depend on it (Depends: librewolf already guarantees it's present).
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 13:26:46 -0500
+
 privacyfox (0.2.0) unstable; urgency=medium
 
   * Target switched from Waterfox to LibreWolf entirely. Root cause:

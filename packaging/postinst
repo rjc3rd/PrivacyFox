@@ -8,43 +8,30 @@
 set -euo pipefail
 
 SHARE_DIR="/usr/share/privacyfox"
+TARGET_DIR="/etc/librewolf/policies"
+TARGET="$TARGET_DIR/policies.json"
+
+# Deliberately NOT <librewolf install dir>/distribution/policies.json --
+# that path is real content the librewolf .deb itself ships (confirmed via
+# `dpkg -S`) and isn't a registered conffile, so a future librewolf
+# package upgrade would silently overwrite it back to their stock file,
+# quietly undoing everything this package set. /etc/librewolf/policies/
+# is the other real location Firefox's policy engine reads (confirmed
+# from Mozilla's own docs) -- genuinely unclaimed, no package owns
+# anything there, so this can't get silently clobbered, and doesn't need
+# install-dir detection at all: Depends: librewolf already guarantees
+# LibreWolf is present by the time this runs.
 
 warn() { echo "[privacyfox] WARNING: $*" >&2; }
 info() { echo "[privacyfox] $*"; }
 
-resolve_librewolf_install_dir() {
-  local candidates=(/usr/share/librewolf /usr/lib/librewolf /opt/librewolf)
-  local d
-  for d in "${candidates[@]}"; do
-    if [[ -x "$d/librewolf" || -x "$d/librewolf-bin" ]]; then
-      echo "$d"
-      return 0
-    fi
-  done
-  if command -v librewolf >/dev/null 2>&1; then
-    local bin_path
-    bin_path="$(readlink -f "$(command -v librewolf)")" || return 1
-    echo "$(dirname "$bin_path")"
-    return 0
-  fi
-  return 1
-}
-
-install_dir="$(resolve_librewolf_install_dir)" || true
-if [[ -z "$install_dir" ]]; then
-  warn "Couldn't find a LibreWolf install -- skipping policies.json for now."
-  warn "Install LibreWolf, then re-run: sudo dpkg-reconfigure privacyfox"
-else
-  dist_dir="$install_dir/distribution"
-  target="$dist_dir/policies.json"
-  mkdir -p "$dist_dir"
-  if [[ -f "$target" ]]; then
-    cp "$target" "$target.bak.$(date +%Y%m%d%H%M%S)" || warn "couldn't back up existing policies.json"
-  fi
-  cp "$SHARE_DIR/distribution/policies.json" "$target" \
-    && info "policies.json installed to $target" \
-    || warn "couldn't install policies.json"
+mkdir -p "$TARGET_DIR"
+if [[ -f "$TARGET" ]]; then
+  cp "$TARGET" "$TARGET.bak.$(date +%Y%m%d%H%M%S)" || warn "couldn't back up existing policies.json"
 fi
+cp "$SHARE_DIR/distribution/policies.json" "$TARGET" \
+  && info "policies.json installed to $TARGET" \
+  || warn "couldn't install policies.json"
 
 echo
 info "System-wide setup done. Each user who wants PrivacyFox's hardened"

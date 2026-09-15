@@ -47,13 +47,14 @@ chmod 0644 "$PKG_ROOT/usr/share/doc/privacyfox/changelog.gz"
 # --- DEBIAN control files -----------------------------------------------------
 install -m 0644 "$SCRIPT_DIR/control" "$PKG_ROOT/DEBIAN/control"
 install -m 0755 "$SCRIPT_DIR/postinst" "$PKG_ROOT/DEBIAN/postinst"
+install -m 0755 "$SCRIPT_DIR/postrm" "$PKG_ROOT/DEBIAN/postrm"
 
 # Normalize perms across the whole tree -- umask above covers files created
 # from here on, but PrivacyFox.js/policies.json were cp'd before it took
 # effect at the point this script is read, so enforce explicitly too.
 find "$PKG_ROOT" -mindepth 1 -type d -exec chmod 0755 {} +
 find "$PKG_ROOT" -mindepth 1 -type f -not -path "*/DEBIAN/*" -exec chmod 0644 {} +
-chmod 0755 "$PKG_ROOT/usr/bin/privacyfox-apply" "$PKG_ROOT/DEBIAN/postinst"
+chmod 0755 "$PKG_ROOT/usr/bin/privacyfox-apply" "$PKG_ROOT/DEBIAN/postinst" "$PKG_ROOT/DEBIAN/postrm"
 
 # Installed-Size is a real, expected control field (kB, best-effort estimate)
 size_kb="$(du -sk "$PKG_ROOT" | cut -f1)"

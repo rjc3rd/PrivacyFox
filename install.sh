@@ -131,17 +131,27 @@ bootstrap_profile() {
 }
 
 # ---- 3. policies.json (system-wide, needs sudo) ----------------------------
+# Deliberately NOT <install dir>/distribution/policies.json -- that path is
+# real package content the `librewolf` .deb itself ships (confirmed via
+# `dpkg -S`), and it isn't a registered conffile (confirmed via
+# `dpkg-query -W -f='${Conffiles}' librewolf` -- doesn't list it), so dpkg
+# has no reason to preserve our edit to it: the next `librewolf` package
+# upgrade would silently overwrite it back to their stock file, quietly
+# undoing everything PrivacyFox set. /etc/librewolf/policies/policies.json
+# is the OTHER real location Firefox's policy engine reads (confirmed from
+# Mozilla's own docs) -- genuinely unclaimed, no package owns anything
+# there, so nothing else can ever silently clobber it, and removing it
+# later is unambiguous (it's 100% ours, nothing to restore).
 install_policies() {
-  local install_dir="$1"
-  local dist_dir="$install_dir/distribution"
-  local target="$dist_dir/policies.json"
+  local target="/etc/librewolf/policies/policies.json"
+  local target_dir="/etc/librewolf/policies"
   local source="$SCRIPT_DIR/distribution/policies.json"
 
   [[ -f "$source" ]] || { warn "distribution/policies.json not found next to this script, skipping"; return 1; }
 
   info "Installing policies.json to $target (needs sudo -- system path)"
-  if [[ ! -d "$dist_dir" ]]; then
-    sudo mkdir -p "$dist_dir" || { warn "couldn't create $dist_dir"; return 1; }
+  if [[ ! -d "$target_dir" ]]; then
+    sudo mkdir -p "$target_dir" || { warn "couldn't create $target_dir"; return 1; }
   fi
   if [[ -f "$target" ]]; then
     sudo cp "$target" "$target.bak.$(date +%Y%m%d%H%M%S)" || warn "couldn't back up existing policies.json"
@@ -209,7 +219,7 @@ main() {
   info "Found default profile at $profile_dir"
 
   local ok=1
-  install_policies "$install_dir" || ok=0
+  install_policies || ok=0
   install_userjs "$profile_dir" || ok=0
   install_usercontent_css "$profile_dir" || ok=0
 

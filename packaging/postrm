@@ -1,0 +1,31 @@
+#!/bin/bash
+# postrm for the privacyfox package -- runs as root, on remove/purge.
+# Fixed interpreter path, same reasoning as postinst.
+#
+# Only cleans up on purge, not plain remove -- matches Debian convention:
+# `apt remove` keeps state around in case of a reinstall, `apt purge` (or
+# `dpkg --purge`) means "get rid of everything this package set up too".
+#
+# Safe to do unconditionally: /etc/librewolf/policies/ is a location this
+# package created (confirmed empty/unclaimed before postinst ever touched
+# it -- see postinst's own comment for why this path was chosen over the
+# one librewolf's own package ships). Nothing else has any legitimate
+# reason to have put files there, so there's no ambiguity about what's
+# safe to remove.
+
+set -euo pipefail
+
+TARGET_DIR="/etc/librewolf/policies"
+
+case "${1:-}" in
+  purge)
+    rm -f "$TARGET_DIR"/policies.json "$TARGET_DIR"/policies.json.bak.* 2>/dev/null || true
+    echo "[privacyfox] Removed policies.json (and any backups) -- LibreWolf reverts to its own stock behavior."
+    # Only removes if actually empty -- never force-deletes, so anything
+    # else that got placed here (or in /etc/librewolf itself) is left alone.
+    rmdir "$TARGET_DIR" 2>/dev/null || true
+    rmdir "/etc/librewolf" 2>/dev/null || true
+    ;;
+esac
+
+exit 0

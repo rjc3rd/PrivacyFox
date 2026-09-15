@@ -97,9 +97,11 @@ Three files, none of which require touching LibreWolf's own installation:
 
 | file | goes in | does what |
 |---|---|---|
-| `policies.json` | `/usr/share/librewolf/distribution/policies.json` | App-level toggles: Firefox Accounts off, force-installed extensions |
+| `policies.json` | `/etc/librewolf/policies/policies.json` | App-level toggles: Firefox Accounts off, force-installed extensions |
 | `PrivacyFox.js` | your profile's `user.js` | The diffed hardening prefs (see above) |
 | `userContent.css` | your profile's `chrome/userContent.css` | Cosmetic cleanup: the dead Account & Sync menu entry |
+
+`policies.json` deliberately does *not* go in `<LibreWolf install dir>/distribution/` — that path is real content the `librewolf` package itself ships (confirmed via `dpkg -S`) and isn't a registered conffile, so a routine `apt upgrade` of LibreWolf would silently overwrite it back to their stock file, quietly undoing this project's hardening with no warning. `/etc/librewolf/policies/` is the other real location Firefox's policy engine reads (confirmed from Mozilla's own docs) and is genuinely unclaimed by any package — nothing can silently clobber it, and removing it later (`apt purge privacyfox`) is completely unambiguous.
 
 Two real ways to install this automatically, both in this repo:
 
