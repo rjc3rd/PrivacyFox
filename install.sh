@@ -11,8 +11,12 @@
 # Doesn't touch Waterfox's own binary, doesn't recompile or repackage
 # anything. See README.md for what each piece actually does.
 #
-# Requires: Waterfox already installed, launched at least once (so a real
-# profile exists to write user.js into).
+# Requires: Waterfox already installed -- nothing else. If you've never
+# launched it before, this script does that bootstrap step itself (a brief
+# headless launch just long enough to create a profile, then closes it
+# again) -- no manual "open it once yourself" step needed. On success, this
+# script launches Waterfox for real at the end, hardened, so you see the
+# result immediately.
 
 set -uo pipefail
 # Deliberately NOT using -e: this script's own history (see PrivacyOS's
@@ -68,6 +72,22 @@ resolve_default_profile_dir() {
   local dir="$HOME/.waterfox/$profile_name"
   [[ -d "$dir" ]] || return 1
   echo "$dir"
+}
+
+# ---- 2b. Bootstrap a profile if none exists yet ----------------------------
+# Real Gecko headless launch, no display server needed. Same mechanism
+# PrivacyOS proved out on real hardware (see its CLAUDE.md) -- launch, give
+# it a few seconds to actually write profiles.ini + the profile folder,
+# kill it, done. Only runs when resolve_default_profile_dir() found nothing;
+# an existing profile (the already-using-Waterfox case) is never touched by
+# this function at all.
+bootstrap_profile() {
+  info "No existing profile found -- launching Waterfox briefly to create one..."
+  waterfox --headless >/dev/null 2>&1 &
+  local pid=$!
+  sleep 6
+  kill "$pid" >/dev/null 2>&1 || true
+  wait "$pid" 2>/dev/null || true
 }
 
 # ---- 3. policies.json (system-wide, needs sudo) ----------------------------
@@ -128,14 +148,18 @@ main() {
   local install_dir
   install_dir="$(resolve_waterfox_install_dir)"
   if [[ -z "$install_dir" ]]; then
-    die "Couldn't find a Waterfox install. Install Waterfox first (waterfox.net), launch it once, then re-run this script."
+    die "Couldn't find a Waterfox install. Install Waterfox first (waterfox.net), then re-run this script."
   fi
   info "Found Waterfox install at $install_dir"
 
   local profile_dir
   profile_dir="$(resolve_default_profile_dir)"
   if [[ -z "$profile_dir" ]]; then
-    die "Couldn't find a Waterfox profile under ~/.waterfox. Launch Waterfox at least once first, then re-run this script."
+    bootstrap_profile
+    profile_dir="$(resolve_default_profile_dir)"
+  fi
+  if [[ -z "$profile_dir" ]]; then
+    die "Couldn't create or find a Waterfox profile under ~/.waterfox. Something's wrong with the Waterfox install itself -- try launching it manually once to see what happens."
   fi
   info "Found default profile at $profile_dir"
 
@@ -146,8 +170,9 @@ main() {
 
   echo
   if [[ "$ok" -eq 1 ]]; then
-    info "Done. Start Waterfox to see it take effect."
-    info "Check about:policies to confirm the policy took, about:addons for the six extensions, about:config for the hardened prefs."
+    info "Done. Launching Waterfox..."
+    info "Check about:policies to confirm the policy took, about:addons for the seven extensions, about:config for the hardened prefs."
+    setsid waterfox >/dev/null 2>&1 &
   else
     warn "Finished with at least one step skipped or failed -- see warnings above."
   fi

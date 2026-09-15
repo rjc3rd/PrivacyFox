@@ -35,6 +35,9 @@ on exit and would silently overwrite what this command just wrote.
 .IP \(bu 2
 Locates your default Waterfox profile via
 .IR ~/.waterfox/profiles.ini .
+If none exists yet \- Waterfox has never been launched \- briefly
+launches it headless just long enough to create one, then closes it
+again. No manual "open it once yourself" step needed first.
 .IP \(bu 2
 Backs up any existing
 .I user.js
@@ -55,13 +58,17 @@ into the profile's
 .I chrome/
 directory, if the package ships one \- purely cosmetic vendor-UI
 cleanup, skipped silently if absent.
+.IP \(bu 2
+On success, launches Waterfox for real, so you see the hardened
+result immediately.
 .SH EXIT STATUS
 .TP
 .B 0
 Applied successfully.
 .TP
 .B 1
-Waterfox was running, no Waterfox profile could be found, or the
+Waterfox was running, no Waterfox profile could be found or created,
+or the
 .B privacyfox
 package's files weren't present at
 .IR /usr/share/privacyfox/ .

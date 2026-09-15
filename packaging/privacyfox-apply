@@ -15,6 +15,11 @@
 #
 # Safe to re-run any time (e.g. after `apt upgrade privacyfox` ships an
 # updated PrivacyFox.js) -- backs up whatever's already there first.
+#
+# If Waterfox has never been launched before (no profile exists yet), this
+# bootstraps one itself -- a brief headless launch just long enough to
+# create it, then closes it again. No manual "open it once yourself" step
+# needed. On success, launches Waterfox for real at the end, hardened.
 
 set -uo pipefail
 
@@ -41,6 +46,15 @@ resolve_default_profile_dir() {
   echo "$dir"
 }
 
+bootstrap_profile() {
+  info "No existing profile found -- launching Waterfox briefly to create one..."
+  waterfox --headless >/dev/null 2>&1 &
+  local pid=$!
+  sleep 6
+  kill "$pid" >/dev/null 2>&1 || true
+  wait "$pid" 2>/dev/null || true
+}
+
 main() {
   if pgrep -x waterfox >/dev/null 2>&1 || pgrep -f '/waterfox$' >/dev/null 2>&1; then
     die "Waterfox is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this writes."
@@ -51,7 +65,11 @@ main() {
   local profile_dir
   profile_dir="$(resolve_default_profile_dir)"
   if [[ -z "$profile_dir" ]]; then
-    die "Couldn't find a Waterfox profile under ~/.waterfox. Launch Waterfox at least once first, then re-run this command."
+    bootstrap_profile
+    profile_dir="$(resolve_default_profile_dir)"
+  fi
+  if [[ -z "$profile_dir" ]]; then
+    die "Couldn't create or find a Waterfox profile under ~/.waterfox. Something's wrong with the Waterfox install itself -- try launching it manually once to see what happens."
   fi
   info "Found profile at $profile_dir"
 
@@ -70,7 +88,8 @@ main() {
   fi
 
   echo
-  info "Done. Start Waterfox to see it take effect."
+  info "Done. Launching Waterfox..."
+  setsid waterfox >/dev/null 2>&1 &
 }
 
 main "$@"

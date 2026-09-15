@@ -87,8 +87,10 @@ Two real ways to install this automatically, both in this repo:
 - **`install.sh`**: `./install.sh` layers all three files directly onto an
   existing Waterfox install/profile in one step, no packaging involved.
 
-Either way, Waterfox needs to already be installed and launched at least once
-(so a real profile exists) before running either of these.
+Either way, Waterfox needs to already be installed — that's it. If you've never
+launched it before, both paths bootstrap a profile for you automatically (a
+brief headless launch just long enough to create one), and both launch
+Waterfox for real once done, hardened, so you see the result immediately.
 
 ## Credits & license
 
