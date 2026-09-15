@@ -144,6 +144,17 @@ One caveat: `policies.json` is system-wide, not per-profile, so installing
 the package affects every profile on the machine immediately, including your
 real one, regardless of which profile you're actively testing against.
 
+**Changed your mind? Uninstall cleanly:**
+```
+sudo apt purge privacyfox
+```
+This deletes the system `policies.json` and any backups — Accounts is no
+longer disabled by policy, and the extensions stop being centrally managed.
+One thing purge deliberately can't reach: the hardening already written into
+your profile's `user.js` by `privacyfox-apply` — that's outside the
+package's control entirely, and stays in place until you edit it yourself
+or restore an earlier profile backup (the same `mv` trick above, in reverse).
+
 ## Credits & license
 
 PrivacyFox is built on, and grateful for, the real work of:
