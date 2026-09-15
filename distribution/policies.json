@@ -45,6 +45,10 @@
       "waterfox.blocker.ui.enabled": {
         "Value": false,
         "Status": "locked"
+      },
+      "waterfox.blocker.dismissedExtensionInstallWarnings": {
+        "Value": "[\"uBlock0@raymondhill.net\"]",
+        "Status": "locked"
       }
     }
   }

@@ -1,3 +1,19 @@
+privacyfox (0.1.3) unstable; urgency=medium
+
+  * Attempt to suppress Waterfox's install-time "keep built-in
+    blocker?" dialog for uBlock Origin by preemptively setting
+    waterfox.blocker.dismissedExtensionInstallWarnings via policy.
+    Honest caveat: this may hit the exact same startup-timing race
+    that let the dialog through in the first place (both prefs apply
+    via the same Preferences policy mechanism, at the same moment) --
+    worth trying since it's low-cost, not guaranteed to fully resolve
+    it. Confirmed real-world testing showed the underlying protection
+    already works correctly even when the dialog appears (the
+    built-in blocker stays locked off regardless of which button
+    gets clicked) -- this only targets the cosmetic dialog itself.
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 11:08:04 -0500
+
 privacyfox (0.1.2) unstable; urgency=medium
 
   * Disable Waterfox's native ad-blocking engine entirely via policy
