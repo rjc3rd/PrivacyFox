@@ -1,4 +1,4 @@
-.TH PRIVACYFOX 1 "September 2026" "privacyfox 0.3.2" "User Commands"
+.TH PRIVACYFOX 1 "September 2026" "privacyfox 0.3.3" "User Commands"
 .SH NAME
 privacyfox \- apply or revert PrivacyFox's hardened profile on your LibreWolf install
 .SH SYNOPSIS
@@ -33,12 +33,15 @@ either direction \- applying or reverting.
 .B "privacyfox --apply"
 does the following, each run:
 .IP \(bu 2
-Refuses to proceed if LibreWolf is currently running, since LibreWolf
-rewrites
+Refuses to proceed if LibreWolf is currently running, since
 .I user.js
-and
+is only ever read at startup, not written back to by LibreWolf itself.
+Writing it while LibreWolf is running would have no effect until the
+next full restart, and
 .I prefs.js
-on exit and would silently overwrite what this command just wrote.
+gets written from the browser's already-loaded state on exit in the
+meantime, so an in-progress session is more likely to cause confusion
+than to actually apply anything.
 .IP \(bu 2
 Locates your default LibreWolf profile via
 .IR profiles.ini ,

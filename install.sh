@@ -192,7 +192,7 @@ install_usercontent_css() {
 
 main() {
   if pgrep -x librewolf >/dev/null 2>&1 || pgrep -f '/librewolf$' >/dev/null 2>&1; then
-    die "LibreWolf is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this installer writes."
+    die "LibreWolf is currently running. Close it first -- it writes prefs.js on exit, and won't actually load what this installer writes until the next full restart anyway."
   fi
 
   local install_dir

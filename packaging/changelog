@@ -1,3 +1,27 @@
+privacyfox (0.3.3) unstable; urgency=low
+
+  * Fixed a real factual error in the "LibreWolf running" refusal
+    message and the man page: both claimed LibreWolf "rewrites
+    user.js... on exit," which isn't true -- LibreWolf only ever reads
+    user.js, once, at startup, and never writes to it. Caught by the
+    user directly questioning the claim (he'd only ever observed
+    profile-folder creation happening at startup, not exit, and asked
+    whether the exit-time claim was actually correct).
+
+    What's actually true: prefs.js (the live preference state, a
+    different file from user.js) is written by the browser on clean
+    shutdown -- that's the real reason to keep LibreWolf closed while
+    applying or reverting. Writing a new user.js while LibreWolf is
+    open has no effect until the next full restart regardless (the
+    running session already loaded whatever it loaded), and
+    prefs.js's exit-time write in the meantime reflects the old,
+    already-loaded state, which is more a source of confusion than an
+    actual overwrite risk to anything this project writes. Corrected
+    the wording in packaging/privacyfox, install.sh, and the man page
+    to describe the real mechanism instead of the wrong one.
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 16:30:41 -0500
+
 privacyfox (0.3.2) unstable; urgency=medium
 
   * Removed the automatic LibreWolf launch at the end of both `--apply`
