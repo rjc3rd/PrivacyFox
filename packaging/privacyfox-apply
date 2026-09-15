@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+#
+# privacyfox-apply
+#
+# Run this once, as yourself (no sudo), after installing the `privacyfox`
+# package. The package itself already installed policies.json system-wide
+# during `apt install` -- this command does the one remaining piece that
+# has to run as a real user: dropping the hardened user.js (and
+# userContent.css, once it ships) into your actual Waterfox profile.
+#
+# Why this isn't done automatically by the package: Debian packaging rules
+# don't allow postinst scripts (which run as root, at install time, with no
+# specific user session) to write into a user's $HOME -- profile setup has
+# to be a separate, per-user step, run by that user.
+#
+# Safe to re-run any time (e.g. after `apt upgrade privacyfox` ships an
+# updated PrivacyFox.js) -- backs up whatever's already there first.
+
+set -uo pipefail
+
+SHARE_DIR="/usr/share/privacyfox"
+
+warn() { echo "[privacyfox] WARNING: $*" >&2; }
+die()  { echo "[privacyfox] ERROR: $*" >&2; exit 1; }
+info() { echo "[privacyfox] $*"; }
+
+resolve_default_profile_dir() {
+  local profiles_ini="$HOME/.waterfox/profiles.ini"
+  [[ -f "$profiles_ini" ]] || return 1
+
+  local profile_name
+  profile_name="$(awk '
+    /^\[Install/ { in_install=1; next }
+    /^\[/        { in_install=0 }
+    in_install && /^Default=/ { sub(/^Default=/, ""); print; exit }
+  ' "$profiles_ini")"
+
+  [[ -n "$profile_name" ]] || return 1
+  local dir="$HOME/.waterfox/$profile_name"
+  [[ -d "$dir" ]] || return 1
+  echo "$dir"
+}
+
+main() {
+  if pgrep -x waterfox >/dev/null 2>&1 || pgrep -f '/waterfox$' >/dev/null 2>&1; then
+    die "Waterfox is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this writes."
+  fi
+
+  [[ -f "$SHARE_DIR/PrivacyFox.js" ]] || die "$SHARE_DIR/PrivacyFox.js not found -- is the privacyfox package actually installed?"
+
+  local profile_dir
+  profile_dir="$(resolve_default_profile_dir)"
+  if [[ -z "$profile_dir" ]]; then
+    die "Couldn't find a Waterfox profile under ~/.waterfox. Launch Waterfox at least once first, then re-run this command."
+  fi
+  info "Found profile at $profile_dir"
+
+  local target="$profile_dir/user.js"
+  if [[ -f "$target" ]]; then
+    cp "$target" "$target.bak.$(date +%Y%m%d%H%M%S)" || warn "couldn't back up existing user.js"
+  fi
+  cp "$SHARE_DIR/PrivacyFox.js" "$target" || die "couldn't write $target"
+  info "user.js installed to $target"
+
+  if [[ -f "$SHARE_DIR/userContent.css" ]]; then
+    mkdir -p "$profile_dir/chrome"
+    cp "$SHARE_DIR/userContent.css" "$profile_dir/chrome/userContent.css" \
+      && info "userContent.css installed to $profile_dir/chrome/userContent.css" \
+      || warn "couldn't install userContent.css"
+  fi
+
+  echo
+  info "Done. Start Waterfox to see it take effect."
+}
+
+main "$@"

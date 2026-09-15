@@ -1,0 +1,54 @@
+#!/bin/bash
+# postinst for the privacyfox package -- runs as root, at install time.
+# Fixed interpreter path (not /usr/bin/env) -- maintainer scripts need a
+# known, direct interpreter, not an env-indirected one.
+# Only touches system paths, deliberately never $HOME (see privacyfox-apply
+# for why that split exists).
+
+set -euo pipefail
+
+SHARE_DIR="/usr/share/privacyfox"
+
+warn() { echo "[privacyfox] WARNING: $*" >&2; }
+info() { echo "[privacyfox] $*"; }
+
+resolve_waterfox_install_dir() {
+  local candidates=(/usr/lib/waterfox /opt/waterfox)
+  local d
+  for d in "${candidates[@]}"; do
+    if [[ -x "$d/waterfox" || -x "$d/waterfox-bin" ]]; then
+      echo "$d"
+      return 0
+    fi
+  done
+  if command -v waterfox >/dev/null 2>&1; then
+    local bin_path
+    bin_path="$(readlink -f "$(command -v waterfox)")" || return 1
+    echo "$(dirname "$bin_path")"
+    return 0
+  fi
+  return 1
+}
+
+install_dir="$(resolve_waterfox_install_dir)" || true
+if [[ -z "$install_dir" ]]; then
+  warn "Couldn't find a Waterfox install -- skipping policies.json for now."
+  warn "Install Waterfox, then re-run: sudo dpkg-reconfigure privacyfox"
+else
+  dist_dir="$install_dir/distribution"
+  target="$dist_dir/policies.json"
+  mkdir -p "$dist_dir"
+  if [[ -f "$target" ]]; then
+    cp "$target" "$target.bak.$(date +%Y%m%d%H%M%S)" || warn "couldn't back up existing policies.json"
+  fi
+  cp "$SHARE_DIR/distribution/policies.json" "$target" \
+    && info "policies.json installed to $target" \
+    || warn "couldn't install policies.json"
+fi
+
+echo
+info "System-wide setup done. Each user who wants PrivacyFox's hardened"
+info "profile settings should now run:  privacyfox-apply"
+info "(no sudo needed for that step -- it only touches your own profile)"
+
+exit 0

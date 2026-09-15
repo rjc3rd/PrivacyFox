@@ -1,0 +1,8 @@
+privacyfox (0.1.0) unstable; urgency=medium
+
+  * Initial release: policies.json (Accounts/Sync off, default-browser
+    nag off, six force-installed privacy extensions) and the merged
+    Arkenfox + Betterfox PrivacyFox.js hardening file, applied via the
+    privacyfox-apply command.
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Mon, 14 Sep 2026 23:33:40 -0500

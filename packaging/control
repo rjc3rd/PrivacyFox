@@ -1,0 +1,20 @@
+Package: privacyfox
+Version: 0.1.0
+Section: web
+Priority: optional
+Architecture: all
+Depends: waterfox
+Maintainer: PrivacyFox Project <hello@privacyfox.dev>
+Homepage: https://privacyfox.dev
+Description: Hardening config layer for Waterfox
+ PrivacyFox doesn't touch Waterfox's own code -- it's a config layer
+ installed on top of a real, official, unmodified Waterfox install.
+ .
+ This package installs a policies.json (disables Firefox Accounts/Sync
+ nagging and the default-browser check, force-installs a curated set of
+ privacy extensions) and provides the privacyfox-apply command, which
+ each user runs once to drop a merged Arkenfox + Betterfox hardening
+ user.js into their own profile.
+ .
+ See https://privacyfox.dev and https://github.com/rjc3rd/PrivacyFox for
+ full details and credits.
