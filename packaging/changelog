@@ -1,3 +1,30 @@
+privacyfox (0.1.4) unstable; urgency=medium
+
+  * Real, deterministic fix for the install-time "keep built-in
+    blocker?" dialog -- supersedes 0.1.3's speculative attempt
+    (dismissedExtensionInstallWarnings), which is removed as
+    redundant now that the actual root cause is fixed properly.
+
+    Traced the exact guard logic in Waterfox's own source
+    (WaterfoxBlockerExtensionDetector.sys.mjs): every one of its
+    detection/notification/install-warning functions checks
+    waterfox.blocker.coexist FIRST, unconditionally, before touching
+    anything else -- when true, they all return immediately. Setting
+    it via policy (locked true) means none of that machinery ever
+    runs at all, rather than racing a value it reads elsewhere. The
+    native blocker itself stays genuinely, permanently off via the
+    separately-locked waterfox.blocker.enabled -- this just also
+    stops Waterfox's own nanny-logic from reacting to that at all.
+
+    Real user testing (multiple rounds, working through this
+    together) is what surfaced this needed a real fix rather than
+    being documented away as cosmetic -- a public tool showing
+    unexplained warnings on first launch, that LibreWolf/Waterfox
+    themselves never show, undermines trust regardless of whether the
+    underlying protection already works.
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 11:27:22 -0500
+
 privacyfox (0.1.3) unstable; urgency=medium
 
   * Attempt to suppress Waterfox's install-time "keep built-in

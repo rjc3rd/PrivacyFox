@@ -46,8 +46,8 @@
         "Value": false,
         "Status": "locked"
       },
-      "waterfox.blocker.dismissedExtensionInstallWarnings": {
-        "Value": "[\"uBlock0@raymondhill.net\"]",
+      "waterfox.blocker.coexist": {
+        "Value": true,
         "Status": "locked"
       }
     }
