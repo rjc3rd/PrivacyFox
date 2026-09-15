@@ -70,12 +70,12 @@ offer_install_librewolf() {
     return 1
   fi
 
-  sudo apt-get update || { warn "apt update failed"; return 1; }
-  sudo apt-get install -y extrepo || { warn "couldn't install extrepo"; return 1; }
+  sudo apt-get -qq update || { warn "apt update failed"; return 1; }
+  sudo apt-get -qq install -y extrepo || { warn "couldn't install extrepo"; return 1; }
   sudo extrepo enable librewolf || { warn "couldn't enable LibreWolf's repo via extrepo"; return 1; }
   sudo extrepo update librewolf || { warn "couldn't update LibreWolf's repo via extrepo"; return 1; }
-  sudo apt-get update || { warn "apt update failed"; return 1; }
-  sudo apt-get install -y librewolf || { warn "librewolf install failed"; return 1; }
+  sudo apt-get -qq update || { warn "apt update failed"; return 1; }
+  sudo apt-get -qq install -y librewolf || { warn "librewolf install failed"; return 1; }
 
   info "LibreWolf installed."
   return 0
