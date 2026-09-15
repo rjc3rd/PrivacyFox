@@ -27,8 +27,11 @@
 # with no specific user session) to write into a user's $HOME -- that has
 # to be a separate, per-user step, run by that user, either direction.
 #
-# Both modes launch LibreWolf for real at the end, so you see the result
-# immediately.
+# Neither mode launches LibreWolf when it's done -- you open and close your
+# own browser. The one exception is the brief headless launch-then-kill in
+# --apply's profile bootstrap above, which exists only to make LibreWolf
+# generate a profile when none exists yet; it's not a real launch and
+# nothing is left running afterward.
 
 set -uo pipefail
 
@@ -126,8 +129,7 @@ revert_profile() {
   fi
 
   echo
-  info "Done. Profile reverted. Launching LibreWolf..."
-  setsid librewolf >/dev/null 2>&1 &
+  info "Done. Profile reverted -- open LibreWolf yourself to confirm."
 }
 
 apply_profile() {
@@ -163,8 +165,7 @@ apply_profile() {
   fi
 
   echo
-  info "Done. Launching LibreWolf..."
-  setsid librewolf >/dev/null 2>&1 &
+  info "Done -- open LibreWolf yourself to see the hardened result."
 }
 
 main() {

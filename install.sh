@@ -16,9 +16,9 @@
 # Debian's own trusted-repo tool) and install it for you. If you've never
 # launched it before, this script also bootstraps a profile itself (a brief
 # headless launch just long enough to create one, then closes it again) --
-# no manual "open it once yourself" step needed. On success, this script
-# launches LibreWolf for real at the end, hardened, so you see the result
-# immediately.
+# no manual "open it once yourself" step needed. This script never launches
+# LibreWolf for real, before or after -- you're in charge of opening and
+# closing your own browser.
 
 set -uo pipefail
 # Deliberately NOT using -e: this script's own history (see PrivacyOS's
@@ -225,9 +225,8 @@ main() {
 
   echo
   if [[ "$ok" -eq 1 ]]; then
-    info "Done. Launching LibreWolf..."
+    info "Done -- open LibreWolf yourself to see the hardened result."
     info "Check about:policies to confirm the policy took, about:addons for the seven extensions, about:config for the hardened prefs."
-    setsid librewolf >/dev/null 2>&1 &
   else
     warn "Finished with at least one step skipped or failed -- see warnings above."
   fi

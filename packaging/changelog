@@ -1,3 +1,30 @@
+privacyfox (0.3.2) unstable; urgency=medium
+
+  * Removed the automatic LibreWolf launch at the end of both `--apply`
+    and `--revert`. Real problem found by the user actually running the
+    uninstall sequence: `--revert` relaunched LibreWolf immediately
+    after restoring the profile, which meant it was never actually
+    possible to get to `sudo apt purge privacyfox` next without closing
+    LibreWolf again first -- confusing at best, and the wrong default
+    for a tool meant to be scripted/tested repeatedly. Neither mode
+    launches the browser now, in either direction; the user opens and
+    closes their own LibreWolf.
+
+    The one thing this doesn't touch: the brief headless launch-then-
+    kill `--apply` already used to bootstrap a missing profile. That's
+    not a real launch (nothing is left running, no window ever
+    appears) and still runs -- otherwise a first-time user with no
+    existing profile would have nothing for `--apply` to write into.
+
+  * Same fix applied to install.sh (the direct, no-package install
+    path), which had the identical unconditional launch-at-the-end
+    behavior.
+
+  * Man page, README, and site updated to match -- every "launches
+    LibreWolf for real" claim removed or corrected.
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 14:57:51 -0500
+
 privacyfox (0.3.1) unstable; urgency=low
 
   * Renamed the command from `privacyfox-apply` to `privacyfox`, caught

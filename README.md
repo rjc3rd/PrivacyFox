@@ -121,12 +121,13 @@ Two real ways to install this automatically, both in this repo:
 
 Either way, once LibreWolf is present, no other manual step is needed. If
 you've never launched it before, both paths bootstrap a profile for you
-automatically (a brief headless launch just long enough to create one), and
-both launch LibreWolf for real once done, hardened, so you see the result
-immediately.
+automatically (a brief headless launch just long enough to create one, then
+closed again). Neither path launches LibreWolf for real when it's done —
+open it yourself, whenever you're ready, to see the hardened result.
 
-**One thing to expect on that first launch, completely normal:** the seven
-policy-managed extensions take a couple of minutes to actually finish
+**One thing to expect the first time you open it afterward, completely
+normal:** the seven policy-managed extensions take a couple of minutes to
+actually finish
 installing in the background — give it a moment.
 
 **Already using LibreWolf and want to try this risk-free first?** Since

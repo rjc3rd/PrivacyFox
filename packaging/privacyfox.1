@@ -1,4 +1,4 @@
-.TH PRIVACYFOX 1 "September 2026" "privacyfox 0.3.1" "User Commands"
+.TH PRIVACYFOX 1 "September 2026" "privacyfox 0.3.2" "User Commands"
 .SH NAME
 privacyfox \- apply or revert PrivacyFox's hardened profile on your LibreWolf install
 .SH SYNOPSIS
@@ -76,9 +76,11 @@ into the profile's
 .I chrome/
 directory, if the package ships one \- a small cosmetic cleanup,
 skipped silently if absent.
-.IP \(bu 2
-On success, launches LibreWolf for real, so you see the hardened
-result immediately.
+.PP
+Does not launch LibreWolf when done \- open it yourself to see the
+result. The one exception is the brief headless launch\-then\-kill
+used above to bootstrap a missing profile, which is not a real launch
+and leaves nothing running afterward.
 .PP
 Safe to re-run at any time, including after
 .B "apt upgrade privacyfox"
@@ -96,8 +98,8 @@ and
 .I userContent.css
 are restored from the newest pre-PrivacyFox backup found in the
 profile, or removed outright if no backup exists (meaning the profile
-had neither file before PrivacyFox ever touched it). LibreWolf is
-then launched again so you can confirm stock behavior directly.
+had neither file before PrivacyFox ever touched it). Does not launch
+LibreWolf when done \- open it yourself to confirm stock behavior.
 .PP
 This is the counterpart to
 .BR "sudo apt purge privacyfox" ,
