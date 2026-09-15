@@ -107,11 +107,11 @@ install_userjs() {
   return 0
 }
 
-# ---- 5. userContent.css (optional, not built yet) --------------------------
+# ---- 5. userContent.css (cosmetic vendor-UI cleanup) -----------------------
 install_usercontent_css() {
   local profile_dir="$1"
   local source="$SCRIPT_DIR/userContent.css"
-  [[ -f "$source" ]] || return 0   # not an error -- this file doesn't exist in the repo yet
+  [[ -f "$source" ]] || return 0   # not an error -- harmless if it's ever removed
 
   local chrome_dir="$profile_dir/chrome"
   mkdir -p "$chrome_dir" || { warn "couldn't create $chrome_dir"; return 1; }

@@ -7,9 +7,11 @@ the browser itself. It's a small, transparent config layer you drop on top of a
 real, official, unmodified Waterfox install — the same binary everyone else gets,
 just configured the way it should have shipped in the first place.
 
-> **Status: early / work in progress.** The pieces below are the plan and the
-> scaffold. The actual merged hardening file and extension policy aren't built yet
-> — check back, or watch this repo.
+> **Status: early, but real.** The merged hardening file, extension policy,
+> cosmetic cleanup layer, installer script, and a real `.deb` are all built and
+> committed. What's still missing: an actual APT repo to host it in (for now it's
+> a downloadable `.deb`, not yet `apt upgrade`-able) and real-world soak time —
+> this hasn't been used as a daily driver long enough yet to call it done.
 
 ## What it actually changes
 
@@ -54,8 +56,18 @@ Three files, none of which require touching Waterfox's own installation:
 | `PrivacyFox.js` | your profile's `user.js` | The merged Arkenfox + Betterfox hardening prefs |
 | `userContent.css` | your profile's `chrome/userContent.css` | Cosmetic vendor-UI cleanup |
 
-A proper installer (script or `.deb`) that drops these in place automatically is
-planned — for now, this is the manual placement.
+Two real ways to install this automatically, both in this repo:
+
+- **`.deb`**: `sudo apt install ./privacyfox_*.deb` (build it yourself with
+  `packaging/build-deb.sh`, or grab one from Releases once published), then run
+  `privacyfox-apply` once as yourself (no sudo — it only touches your own profile).
+  The split exists because Debian packaging rules don't let a package's install
+  step write into your home directory.
+- **`install.sh`**: `./install.sh` layers all three files directly onto an
+  existing Waterfox install/profile in one step, no packaging involved.
+
+Either way, Waterfox needs to already be installed and launched at least once
+(so a real profile exists) before running either of these.
 
 ## Credits & license
 
