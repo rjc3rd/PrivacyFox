@@ -1,34 +1,26 @@
 /* PrivacyFox userContent.css
  *
- * Cosmetic cleanup only -- removes dead/vendor-branding menu entries from
- * about:preferences that don't have a policies.json key to disable
- * properly. Everything with a real policy (Accounts/Sync, default-browser
- * nag) is handled there instead -- see distribution/policies.json. This
- * file exists only for what's left over: leftover UI for features already
- * killed by policy, plus vendor branding/support links.
+ * Cosmetic cleanup only -- removes one dead menu entry from
+ * about:preferences that doesn't have a policies.json key to hide
+ * properly. Everything else (Accounts, default-browser nag, extensions)
+ * is handled there instead -- see distribution/policies.json.
  *
  * Deliberately does NOT hide the Default Browser card/button in the
  * Home/Startup pane -- disabling the automatic nag (DontCheckDefaultBrowser
  * in policies.json) is not the same as removing your ability to actually
- * choose PrivacyFox/Waterfox as your default. That choice stays visible.
+ * choose LibreWolf as your default. That choice stays visible.
+ *
+ * Also deliberately does NOT hide LibreWolf's own About page or support
+ * link -- those point at LibreWolf's real project/issue tracker, not
+ * vendor branding clutter to distance from. PrivacyFox builds on LibreWolf,
+ * it doesn't hide it.
  */
 @-moz-document url-prefix("about:preferences") {
   /* Account & Sync nav entry -- DisableFirefoxAccounts (policies.json)
-     already disables the feature itself; Waterfox's current settings
+     already disables the feature itself; the settings page's current
      redesign shows this nav button regardless of that policy, so the
      empty/dead entry needs to be removed separately, here. */
   #category-sync {
-    display: none !important;
-  }
-
-  /* About Waterfox nav entry -- vendor branding/update-channel page, not
-     something PrivacyFox needs to add UI chrome around. */
-  #category-about-firefox {
-    display: none !important;
-  }
-
-  /* Waterfox support footer link -- same reasoning as above. */
-  #helpButton {
     display: none !important;
   }
 }

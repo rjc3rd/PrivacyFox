@@ -12,28 +12,28 @@ SHARE_DIR="/usr/share/privacyfox"
 warn() { echo "[privacyfox] WARNING: $*" >&2; }
 info() { echo "[privacyfox] $*"; }
 
-resolve_waterfox_install_dir() {
-  local candidates=(/usr/lib/waterfox /opt/waterfox)
+resolve_librewolf_install_dir() {
+  local candidates=(/usr/share/librewolf /usr/lib/librewolf /opt/librewolf)
   local d
   for d in "${candidates[@]}"; do
-    if [[ -x "$d/waterfox" || -x "$d/waterfox-bin" ]]; then
+    if [[ -x "$d/librewolf" || -x "$d/librewolf-bin" ]]; then
       echo "$d"
       return 0
     fi
   done
-  if command -v waterfox >/dev/null 2>&1; then
+  if command -v librewolf >/dev/null 2>&1; then
     local bin_path
-    bin_path="$(readlink -f "$(command -v waterfox)")" || return 1
+    bin_path="$(readlink -f "$(command -v librewolf)")" || return 1
     echo "$(dirname "$bin_path")"
     return 0
   fi
   return 1
 }
 
-install_dir="$(resolve_waterfox_install_dir)" || true
+install_dir="$(resolve_librewolf_install_dir)" || true
 if [[ -z "$install_dir" ]]; then
-  warn "Couldn't find a Waterfox install -- skipping policies.json for now."
-  warn "Install Waterfox, then re-run: sudo dpkg-reconfigure privacyfox"
+  warn "Couldn't find a LibreWolf install -- skipping policies.json for now."
+  warn "Install LibreWolf, then re-run: sudo dpkg-reconfigure privacyfox"
 else
   dist_dir="$install_dir/distribution"
   target="$dist_dir/policies.json"

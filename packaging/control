@@ -1,20 +1,21 @@
 Package: privacyfox
-Version: 0.1.4
+Version: 0.2.0
 Section: web
 Priority: optional
 Architecture: all
-Depends: waterfox
+Depends: librewolf
 Maintainer: PrivacyFox Project <hello@privacyfox.dev>
 Homepage: https://privacyfox.dev
-Description: Hardening config layer for Waterfox
- PrivacyFox doesn't touch Waterfox's own code -- it's a config layer
- installed on top of a real, official, unmodified Waterfox install.
+Description: Hardening config layer for LibreWolf
+ PrivacyFox doesn't touch LibreWolf's own code -- it's a config layer
+ installed on top of a real, official, unmodified LibreWolf install.
  .
- This package installs a policies.json (disables Firefox Accounts/Sync
- nagging and the default-browser check, force-installs a curated set of
- privacy extensions) and provides the privacyfox-apply command, which
- each user runs once to drop a merged Arkenfox + Betterfox hardening
- user.js into their own profile.
+ This package installs a policies.json (disables Firefox Accounts/Sync,
+ force-installs a curated set of privacy extensions alongside LibreWolf's
+ own default uBlock Origin) and provides the privacyfox-apply command,
+ which each user runs once to drop a hardening user.js -- properly diffed
+ against LibreWolf's own real defaults, not blindly layered on top -- into
+ their own profile.
  .
  See https://privacyfox.dev and https://github.com/rjc3rd/PrivacyFox for
  full details and credits.

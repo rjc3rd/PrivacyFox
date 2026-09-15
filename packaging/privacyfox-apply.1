@@ -1,6 +1,6 @@
-.TH PRIVACYFOX-APPLY 1 "September 2026" "privacyfox 0.1.1" "User Commands"
+.TH PRIVACYFOX-APPLY 1 "September 2026" "privacyfox 0.2.0" "User Commands"
 .SH NAME
-privacyfox-apply \- apply PrivacyFox's hardened profile to your Waterfox install
+privacyfox-apply \- apply PrivacyFox's hardened profile to your LibreWolf install
 .SH SYNOPSIS
 .B privacyfox-apply
 .SH DESCRIPTION
@@ -10,12 +10,12 @@ finishes the setup that the
 package's install step can't safely do itself. Installing the package
 already drops
 .I distribution/policies.json
-into Waterfox's system install directory \- that part runs as root,
+into LibreWolf's system install directory \- that part runs as root,
 during
 .BR "apt install" ,
 and needs no further action.
 
-What it can't do at install time is touch your personal Waterfox
+What it can't do at install time is touch your personal LibreWolf
 profile: Debian packaging rules don't allow a
 .B postinst
 maintainer script (which runs as root, with no specific user session)
@@ -26,18 +26,24 @@ does, run once by you, as yourself, with no
 
 Specifically, each run:
 .IP \(bu 2
-Refuses to proceed if Waterfox is currently running, since Waterfox
+Refuses to proceed if LibreWolf is currently running, since LibreWolf
 rewrites
 .I user.js
 and
 .I prefs.js
 on exit and would silently overwrite what this command just wrote.
 .IP \(bu 2
-Locates your default Waterfox profile via
-.IR ~/.waterfox/profiles.ini .
-If none exists yet \- Waterfox has never been launched \- briefly
-launches it headless just long enough to create one, then closes it
-again. No manual "open it once yourself" step needed first.
+Locates your default LibreWolf profile via
+.IR profiles.ini ,
+checking the legacy
+.I ~/.librewolf
+path first and falling back to the XDG
+.I ~/.config/librewolf/librewolf
+path only if the legacy one doesn't already exist \- matching
+LibreWolf's own real compatibility rule. If none exists yet \-
+LibreWolf has never been launched \- briefly launches it headless just
+long enough to create one, then closes it again. No manual "open it
+once yourself" step needed first.
 .IP \(bu 2
 Backs up any existing
 .I user.js
@@ -45,21 +51,24 @@ in that profile to a timestamped
 .I user.js.bak.<timestamp>
 file before overwriting it.
 .IP \(bu 2
-Copies the merged Arkenfox + Betterfox hardening file
+Copies the hardening file
 .RI ( PrivacyFox.js ,
 shipped by the package at
 .IR /usr/share/privacyfox/PrivacyFox.js )
 into the profile as
 .IR user.js .
+This file is a real diff against LibreWolf's own actual defaults, not
+Arkenfox/Betterfox applied blindly on top of them \- see the file's
+own header for the methodology.
 .IP \(bu 2
 Copies
 .I userContent.css
 into the profile's
 .I chrome/
-directory, if the package ships one \- purely cosmetic vendor-UI
-cleanup, skipped silently if absent.
+directory, if the package ships one \- a small cosmetic cleanup,
+skipped silently if absent.
 .IP \(bu 2
-On success, launches Waterfox for real, so you see the hardened
+On success, launches LibreWolf for real, so you see the hardened
 result immediately.
 .SH EXIT STATUS
 .TP
@@ -67,8 +76,8 @@ result immediately.
 Applied successfully.
 .TP
 .B 1
-Waterfox was running, no Waterfox profile could be found or created,
-or the
+LibreWolf was running, no LibreWolf profile could be found or
+created, or the
 .B privacyfox
 package's files weren't present at
 .IR /usr/share/privacyfox/ .
@@ -81,10 +90,13 @@ The hardening file this command copies into your profile.
 .I /usr/share/privacyfox/userContent.css
 The optional cosmetic cleanup file, if shipped.
 .TP
-.I ~/.waterfox/profiles.ini
-Read to find your default profile directory. Not written to.
+.I ~/.librewolf/profiles.ini
+(or
+.I ~/.config/librewolf/librewolf/profiles.ini
+on newer, never-legacy installs) Read to find your default profile
+directory. Not written to.
 .TP
-.I ~/.waterfox/<profile>/user.js
+.I <profile>/user.js
 Overwritten with the content of
 .I PrivacyFox.js
 each run, after a timestamped backup.
@@ -98,10 +110,10 @@ Each run simply refreshes
 from whatever the currently installed package contains, backing up
 the previous version first.
 .SH SEE ALSO
-.BR waterfox (1),
+.BR librewolf (1),
 .I policies.json
 at
-.IR /usr/lib/waterfox/distribution/policies.json ,
+.IR /usr/share/librewolf/distribution/policies.json ,
 installed by the
 .B privacyfox
 package itself.

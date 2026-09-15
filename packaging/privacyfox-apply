@@ -6,7 +6,7 @@
 # package. The package itself already installed policies.json system-wide
 # during `apt install` -- this command does the one remaining piece that
 # has to run as a real user: dropping the hardened user.js (and
-# userContent.css, once it ships) into your actual Waterfox profile.
+# userContent.css) into your actual LibreWolf profile.
 #
 # Why this isn't done automatically by the package: Debian packaging rules
 # don't allow postinst scripts (which run as root, at install time, with no
@@ -16,10 +16,10 @@
 # Safe to re-run any time (e.g. after `apt upgrade privacyfox` ships an
 # updated PrivacyFox.js) -- backs up whatever's already there first.
 #
-# If Waterfox has never been launched before (no profile exists yet), this
+# If LibreWolf has never been launched before (no profile exists yet), this
 # bootstraps one itself -- a brief headless launch just long enough to
 # create it, then closes it again. No manual "open it once yourself" step
-# needed. On success, launches Waterfox for real at the end, hardened.
+# needed. On success, launches LibreWolf for real at the end, hardened.
 
 set -uo pipefail
 
@@ -29,8 +29,22 @@ warn() { echo "[privacyfox] WARNING: $*" >&2; }
 die()  { echo "[privacyfox] ERROR: $*" >&2; exit 1; }
 info() { echo "[privacyfox] $*"; }
 
+# LibreWolf (Firefox 147+ base) falls back to ~/.config/librewolf/librewolf
+# via XDG Base Directory support, but ONLY when the legacy ~/.librewolf
+# doesn't already exist -- confirmed on real hardware by PrivacyOS. Check
+# legacy first, matching the browser's own real compatibility rule.
+resolve_librewolf_profile_root() {
+  if [[ -d "$HOME/.librewolf" ]]; then
+    echo "$HOME/.librewolf"
+  else
+    echo "${XDG_CONFIG_HOME:-$HOME/.config}/librewolf/librewolf"
+  fi
+}
+
 resolve_default_profile_dir() {
-  local profiles_ini="$HOME/.waterfox/profiles.ini"
+  local profile_root
+  profile_root="$(resolve_librewolf_profile_root)"
+  local profiles_ini="$profile_root/profiles.ini"
   [[ -f "$profiles_ini" ]] || return 1
 
   local profile_name
@@ -41,14 +55,14 @@ resolve_default_profile_dir() {
   ' "$profiles_ini")"
 
   [[ -n "$profile_name" ]] || return 1
-  local dir="$HOME/.waterfox/$profile_name"
+  local dir="$profile_root/$profile_name"
   [[ -d "$dir" ]] || return 1
   echo "$dir"
 }
 
 bootstrap_profile() {
-  info "No existing profile found -- launching Waterfox briefly to create one..."
-  waterfox --headless >/dev/null 2>&1 &
+  info "No existing profile found -- launching LibreWolf briefly to create one..."
+  librewolf --headless >/dev/null 2>&1 &
   local pid=$!
   sleep 6
   kill "$pid" >/dev/null 2>&1 || true
@@ -56,8 +70,8 @@ bootstrap_profile() {
 }
 
 main() {
-  if pgrep -x waterfox >/dev/null 2>&1 || pgrep -f '/waterfox$' >/dev/null 2>&1; then
-    die "Waterfox is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this writes."
+  if pgrep -x librewolf >/dev/null 2>&1 || pgrep -f '/librewolf$' >/dev/null 2>&1; then
+    die "LibreWolf is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this writes."
   fi
 
   [[ -f "$SHARE_DIR/PrivacyFox.js" ]] || die "$SHARE_DIR/PrivacyFox.js not found -- is the privacyfox package actually installed?"
@@ -69,7 +83,7 @@ main() {
     profile_dir="$(resolve_default_profile_dir)"
   fi
   if [[ -z "$profile_dir" ]]; then
-    die "Couldn't create or find a Waterfox profile under ~/.waterfox. Something's wrong with the Waterfox install itself -- try launching it manually once to see what happens."
+    die "Couldn't create or find a LibreWolf profile. Something's wrong with the LibreWolf install itself -- try launching it manually once to see what happens."
   fi
   info "Found profile at $profile_dir"
 
@@ -88,8 +102,8 @@ main() {
   fi
 
   echo
-  info "Done. Launching Waterfox..."
-  setsid waterfox >/dev/null 2>&1 &
+  info "Done. Launching LibreWolf..."
+  setsid librewolf >/dev/null 2>&1 &
 }
 
 main "$@"

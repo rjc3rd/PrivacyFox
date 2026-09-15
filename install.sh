@@ -3,20 +3,22 @@
 # PrivacyFox installer
 #
 # Layers PrivacyFox's config on top of an existing, real, unmodified
-# Waterfox install:
-#   - distribution/policies.json  -> <waterfox install dir>/distribution/
-#   - PrivacyFox.js                -> <profile>/user.js
+# LibreWolf install:
+#   - distribution/policies.json  -> <librewolf install dir>/distribution/
+#   - PrivacyFox.js                 -> <profile>/user.js
 #   - (userContent.css, when it exists -> <profile>/chrome/userContent.css)
 #
-# Doesn't touch Waterfox's own binary, doesn't recompile or repackage
+# Doesn't touch LibreWolf's own binary, doesn't recompile or repackage
 # anything. See README.md for what each piece actually does.
 #
-# Requires: Waterfox already installed -- nothing else. If you've never
-# launched it before, this script does that bootstrap step itself (a brief
-# headless launch just long enough to create a profile, then closes it
-# again) -- no manual "open it once yourself" step needed. On success, this
-# script launches Waterfox for real at the end, hardened, so you see the
-# result immediately.
+# Requires: LibreWolf already installed -- nothing else. If it's missing,
+# this script offers to add LibreWolf's own official APT repo (via extrepo,
+# Debian's own trusted-repo tool) and install it for you. If you've never
+# launched it before, this script also bootstraps a profile itself (a brief
+# headless launch just long enough to create one, then closes it again) --
+# no manual "open it once yourself" step needed. On success, this script
+# launches LibreWolf for real at the end, hardened, so you see the result
+# immediately.
 
 set -uo pipefail
 # Deliberately NOT using -e: this script's own history (see PrivacyOS's
@@ -31,107 +33,72 @@ warn() { echo "[privacyfox] WARNING: $*" >&2; }
 die()  { echo "[privacyfox] ERROR: $*" >&2; exit 1; }
 info() { echo "[privacyfox] $*"; }
 
-# ---- 1. Find the Waterfox install directory -------------------------------
-resolve_waterfox_install_dir() {
-  local candidates=(/usr/lib/waterfox /opt/waterfox)
+# ---- 1. Find the LibreWolf install directory -------------------------------
+resolve_librewolf_install_dir() {
+  local candidates=(/usr/share/librewolf /usr/lib/librewolf /opt/librewolf)
   local d
   for d in "${candidates[@]}"; do
-    if [[ -x "$d/waterfox" || -x "$d/waterfox-bin" ]]; then
+    if [[ -x "$d/librewolf" || -x "$d/librewolf-bin" ]]; then
       echo "$d"
       return 0
     fi
   done
-  if command -v waterfox >/dev/null 2>&1; then
+  if command -v librewolf >/dev/null 2>&1; then
     local bin_path
-    bin_path="$(readlink -f "$(command -v waterfox)")" || return 1
+    bin_path="$(readlink -f "$(command -v librewolf)")" || return 1
     echo "$(dirname "$bin_path")"
     return 0
   fi
   return 1
 }
 
-# ---- 1b. Offer to install Waterfox itself, if it's missing -----------------
-# Only offers for OS/version combinations verified against Waterfox's own
-# real repo listing (waterfox.com/download) -- Debian 13 confirmed directly
-# against this machine's own working /etc/apt/sources.list.d/waterfox.list,
-# Ubuntu's xUbuntu_<version> naming confirmed from their docs. Notably,
-# Debian 12 is NOT in Waterfox's own supported list at all -- don't guess a
-# path for it or any other unlisted combination, just tell the user to
-# install it themselves rather than risk adding a wrong/broken repo.
-detect_waterfox_repo_path() {
-  [[ -f /etc/os-release ]] || return 1
-  local os_id="" codename="" version_id=""
-  # shellcheck disable=SC1091
-  . /etc/os-release
-  os_id="$ID"
-  codename="$VERSION_CODENAME"
-  version_id="$VERSION_ID"
-
-  case "$os_id" in
-    debian)
-      case "$codename" in
-        trixie) echo "Debian_13"; return 0 ;;
-        sid|unstable) echo "Debian_Unstable"; return 0 ;;
-      esac
-      ;;
-    ubuntu)
-      case "$version_id" in
-        22.04|24.04|24.10|25.04|25.10|26.04) echo "xUbuntu_${version_id}"; return 0 ;;
-      esac
-      ;;
-  esac
-  return 1
-}
-
-offer_install_waterfox() {
-  local repo_path
-  repo_path="$(detect_waterfox_repo_path)"
-  if [[ -z "$repo_path" ]]; then
-    warn "Waterfox isn't installed, and I don't have a verified repo path for"
-    warn "your specific OS/version. Install it yourself: https://www.waterfox.com/download/"
-    return 1
-  fi
-
+# ---- 1b. Offer to install LibreWolf itself, if it's missing ----------------
+# LibreWolf's own real install docs (librewolf.net/installation/debian)
+# use extrepo -- Debian's own trusted-repo-enabler tool -- and the exact
+# same three commands apply universally across Debian-based distros
+# (Debian, Ubuntu, Mint, etc.), no per-OS-version branching needed. Much
+# simpler than Waterfox's raw curl+gpg+sources.list approach, and nothing
+# here is guessed -- confirmed directly from their current install page.
+offer_install_librewolf() {
   echo
-  echo "Waterfox isn't installed. PrivacyFox can add Waterfox's own official"
-  echo "APT repo (download.opensuse.org/repositories/isv:/BrowserWorks/$repo_path/)"
+  echo "LibreWolf isn't installed. PrivacyFox can add LibreWolf's own"
+  echo "official APT repo (via extrepo, Debian's own trusted-repo tool)"
   echo "and install it for you -- needs sudo."
   read -r -p "Proceed? [y/N] " reply
   if [[ ! "$reply" =~ ^[Yy]$ ]]; then
-    warn "Skipped. Install Waterfox yourself, then re-run this script."
-    return 1
-  fi
-
-  local key_url="https://download.opensuse.org/repositories/isv:/BrowserWorks/${repo_path}/Release.key"
-  curl -fsSL "$key_url" | gpg --dearmor | sudo tee /usr/share/keyrings/waterfox.gpg > /dev/null
-  if [[ ! -s /usr/share/keyrings/waterfox.gpg ]]; then
-    warn "Couldn't fetch/import Waterfox's signing key."
-    return 1
-  fi
-
-  echo "deb [signed-by=/usr/share/keyrings/waterfox.gpg] https://download.opensuse.org/repositories/isv:/BrowserWorks/${repo_path}/ /" \
-    | sudo tee /etc/apt/sources.list.d/waterfox.list > /dev/null
-  if [[ ! -f /etc/apt/sources.list.d/waterfox.list ]]; then
-    warn "Couldn't write /etc/apt/sources.list.d/waterfox.list."
+    warn "Skipped. Install LibreWolf yourself (librewolf.net), then re-run this script."
     return 1
   fi
 
   sudo apt-get update || { warn "apt update failed"; return 1; }
-  sudo apt-get install -y waterfox || { warn "waterfox install failed"; return 1; }
+  sudo apt-get install -y extrepo || { warn "couldn't install extrepo"; return 1; }
+  sudo extrepo enable librewolf || { warn "couldn't enable LibreWolf's repo via extrepo"; return 1; }
+  sudo extrepo update librewolf || { warn "couldn't update LibreWolf's repo via extrepo"; return 1; }
+  sudo apt-get update || { warn "apt update failed"; return 1; }
+  sudo apt-get install -y librewolf || { warn "librewolf install failed"; return 1; }
 
-  info "Waterfox installed."
+  info "LibreWolf installed."
   return 0
 }
 
 # ---- 2. Find the default profile directory ---------------------------------
-# Waterfox still uses the legacy ~/.waterfox path (not XDG) as of this
-# writing -- unlike LibreWolf/Firefox 147+, which fall back to
-# ~/.config/... only when ~/.waterfox doesn't already exist. No verified
-# evidence Waterfox does the same (this exact caveat is carried over from
-# PrivacyOS's own real-hardware findings) -- if that ever changes, this
-# needs a resolve_profile_root()-style fallback added, not a silent guess.
+# LibreWolf (Firefox 147+ base) falls back to ~/.config/librewolf/librewolf
+# via XDG Base Directory support, but ONLY when the legacy ~/.librewolf
+# doesn't already exist -- confirmed directly on real hardware by PrivacyOS
+# (see its CLAUDE.md, "the big one" real finding). Check legacy first,
+# matching the browser's own real compatibility rule exactly, not guessing.
+resolve_librewolf_profile_root() {
+  if [[ -d "$HOME/.librewolf" ]]; then
+    echo "$HOME/.librewolf"
+  else
+    echo "${XDG_CONFIG_HOME:-$HOME/.config}/librewolf/librewolf"
+  fi
+}
+
 resolve_default_profile_dir() {
-  local profiles_ini="$HOME/.waterfox/profiles.ini"
+  local profile_root
+  profile_root="$(resolve_librewolf_profile_root)"
+  local profiles_ini="$profile_root/profiles.ini"
   [[ -f "$profiles_ini" ]] || return 1
 
   local profile_name
@@ -142,7 +109,7 @@ resolve_default_profile_dir() {
   ' "$profiles_ini")"
 
   [[ -n "$profile_name" ]] || return 1
-  local dir="$HOME/.waterfox/$profile_name"
+  local dir="$profile_root/$profile_name"
   [[ -d "$dir" ]] || return 1
   echo "$dir"
 }
@@ -152,11 +119,11 @@ resolve_default_profile_dir() {
 # PrivacyOS proved out on real hardware (see its CLAUDE.md) -- launch, give
 # it a few seconds to actually write profiles.ini + the profile folder,
 # kill it, done. Only runs when resolve_default_profile_dir() found nothing;
-# an existing profile (the already-using-Waterfox case) is never touched by
+# an existing profile (the already-using-LibreWolf case) is never touched by
 # this function at all.
 bootstrap_profile() {
-  info "No existing profile found -- launching Waterfox briefly to create one..."
-  waterfox --headless >/dev/null 2>&1 &
+  info "No existing profile found -- launching LibreWolf briefly to create one..."
+  librewolf --headless >/dev/null 2>&1 &
   local pid=$!
   sleep 6
   kill "$pid" >/dev/null 2>&1 || true
@@ -214,21 +181,21 @@ install_usercontent_css() {
 }
 
 main() {
-  if pgrep -x waterfox >/dev/null 2>&1 || pgrep -f '/waterfox$' >/dev/null 2>&1; then
-    die "Waterfox is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this installer writes."
+  if pgrep -x librewolf >/dev/null 2>&1 || pgrep -f '/librewolf$' >/dev/null 2>&1; then
+    die "LibreWolf is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this installer writes."
   fi
 
   local install_dir
-  install_dir="$(resolve_waterfox_install_dir)"
+  install_dir="$(resolve_librewolf_install_dir)"
   if [[ -z "$install_dir" ]]; then
-    if offer_install_waterfox; then
-      install_dir="$(resolve_waterfox_install_dir)"
+    if offer_install_librewolf; then
+      install_dir="$(resolve_librewolf_install_dir)"
     fi
   fi
   if [[ -z "$install_dir" ]]; then
-    die "Couldn't find a Waterfox install."
+    die "Couldn't find a LibreWolf install."
   fi
-  info "Found Waterfox install at $install_dir"
+  info "Found LibreWolf install at $install_dir"
 
   local profile_dir
   profile_dir="$(resolve_default_profile_dir)"
@@ -237,7 +204,7 @@ main() {
     profile_dir="$(resolve_default_profile_dir)"
   fi
   if [[ -z "$profile_dir" ]]; then
-    die "Couldn't create or find a Waterfox profile under ~/.waterfox. Something's wrong with the Waterfox install itself -- try launching it manually once to see what happens."
+    die "Couldn't create or find a LibreWolf profile. Something's wrong with the LibreWolf install itself -- try launching it manually once to see what happens."
   fi
   info "Found default profile at $profile_dir"
 
@@ -248,9 +215,9 @@ main() {
 
   echo
   if [[ "$ok" -eq 1 ]]; then
-    info "Done. Launching Waterfox..."
+    info "Done. Launching LibreWolf..."
     info "Check about:policies to confirm the policy took, about:addons for the seven extensions, about:config for the hardened prefs."
-    setsid waterfox >/dev/null 2>&1 &
+    setsid librewolf >/dev/null 2>&1 &
   else
     warn "Finished with at least one step skipped or failed -- see warnings above."
   fi

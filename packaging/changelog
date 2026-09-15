@@ -1,3 +1,56 @@
+privacyfox (0.2.0) unstable; urgency=medium
+
+  * Target switched from Waterfox to LibreWolf entirely. Root cause:
+    Waterfox's own native ad-blocking engine has a startup-timing
+    conflict with policy-driven extension installs (the
+    "keep built-in blocker?" dialog from 0.1.2-0.1.4) that turned out
+    to be structural, not fixable by any combination of Preferences
+    policy values -- three real attempts, three failures, each with
+    logic that looked correct from reading the source. LibreWolf has
+    no native ad-blocker to conflict with at all (ships uBlock Origin
+    itself by default), so the entire bug category doesn't exist
+    there.
+
+  * PrivacyFox.js rebuilt from scratch as a real, proper diff against
+    LibreWolf's own actual hardening (librewolf.cfg 8.6, verified
+    against their live upstream repo) -- not Arkenfox+Betterfox
+    layered blindly on top of it. Of 207 Arkenfox+Betterfox prefs, 118
+    already overlap with LibreWolf's own file (115 agree outright,
+    kept as LibreWolf's own); 3 are genuine, deliberate disagreements
+    (WebRTC ICE address handling, tracking-protection convenience
+    allowlist, formless login capture) where LibreWolf's own choice is
+    treated as intentional and NOT overridden. The remaining 89 prefs,
+    found nowhere in LibreWolf's own file, are this file's actual
+    content -- documented in full in the file's own header.
+
+  * policies.json rebuilt as a real merge into LibreWolf's own current
+    upstream file (not a from-scratch file the way Waterfox's was,
+    since LibreWolf already ships its own) -- their uBlock Origin
+    entry left exactly as they have it (normal_installed, not
+    force-installed or duplicated), six more extensions added
+    alongside it, DisableFirefoxAccounts added (the one thing their
+    own file doesn't already set that this project cares about).
+
+  * install.sh / privacyfox-apply: LibreWolf's real install path
+    (/usr/share/librewolf, confirmed on real hardware) and profile
+    resolution (legacy ~/.librewolf checked first, XDG
+    ~/.config/librewolf/librewolf fallback only if that doesn't
+    exist -- reusing PrivacyOS's own already-proven real-hardware
+    logic for this exact question). Auto-install-if-missing rebuilt
+    around LibreWolf's real, genuinely simpler install method (extrepo,
+    Debian's own trusted-repo tool, three universal commands, no
+    per-OS-version branching needed at all -- unlike Waterfox's).
+
+  * userContent.css trimmed to just the one genuinely dead menu entry
+    (Account & Sync). Dropped the About-page/support-link hides --
+    those pointed at LibreWolf's own real project links, not vendor
+    branding to distance from; this project builds on LibreWolf, it
+    doesn't hide it.
+
+  * Package now Depends: librewolf, not waterfox.
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 12:09:41 -0500
+
 privacyfox (0.1.4) unstable; urgency=medium
 
   * Real, deterministic fix for the install-time "keep built-in
