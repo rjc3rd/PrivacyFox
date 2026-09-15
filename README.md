@@ -101,6 +101,26 @@ automatically (a brief headless launch just long enough to create one), and
 both launch Waterfox for real once done, hardened, so you see the result
 immediately.
 
+**Two things to expect on that first launch, both normal:** the seven
+policy-managed extensions take a couple of minutes to actually finish
+installing in the background — give it a moment. And Waterfox's own native
+ad-blocking engine is disabled by policy (`waterfox.blocker.enabled`, locked)
+in favor of the force-installed uBlock Origin extension — that's the intended
+outcome, not a problem.
+
+**Already using Waterfox and want to try this risk-free first?** Since
+`user.js` lives entirely inside your profile folder:
+```
+mv ~/.waterfox ~/.waterfox.bak    # close Waterfox first
+```
+Launch Waterfox once (creates a fresh, empty profile) and close it again,
+then run either install path above against that fresh profile. Like it?
+Delete `~/.waterfox.bak`. Don't like it? Delete the new `~/.waterfox`, rename
+`~/.waterfox.bak` back, restart Waterfox — everything is exactly as it was.
+One caveat: `policies.json` is system-wide, not per-profile, so installing
+the package affects every profile on the machine immediately, including your
+real one, regardless of which profile you're actively testing against.
+
 ## Credits & license
 
 PrivacyFox is built on, and grateful for, the real work of:
