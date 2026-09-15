@@ -30,7 +30,7 @@ just configured the way it should have shipped in the first place.
   wins" ambiguity the way layering their two files separately would leave you with.
 - **A curated set of privacy extensions**, force-installed via policy so you get a
   sane baseline out of the box: uBlock Origin, ClearURLs, LocalCDN, CanvasBlocker,
-  Don't Track Me Google, Port Authority — each audited for being real, maintained,
+  Don't Track Me Google, Port Authority, Privacy Badger — each audited for being real, maintained,
   and doing what it claims, not just popular.
 - **A small cosmetic cleanup layer** for the vendor UI clutter that doesn't have a
   policy key to turn off cleanly (About page, support links, etc.) — least critical

@@ -1,3 +1,12 @@
+privacyfox (0.1.1) unstable; urgency=medium
+
+  * Add Privacy Badger (jid1-MnnxcxisBPnSXQ@jetpack) as a 7th
+    force-installed extension. Its behavioral tracker-learning is
+    genuinely distinct from the existing static-list/preventive tools
+    already in the baseline, not redundant with them.
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 00:00:00 -0500
+
 privacyfox (0.1.0) unstable; urgency=medium
 
   * Initial release: policies.json (Accounts/Sync off, default-browser
