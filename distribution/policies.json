@@ -35,6 +35,17 @@
         "installation_mode": "force_installed",
         "install_url": "https://addons.mozilla.org/firefox/downloads/latest/privacy-badger17/latest.xpi"
       }
+    },
+
+    "Preferences": {
+      "waterfox.blocker.enabled": {
+        "Value": false,
+        "Status": "locked"
+      },
+      "waterfox.blocker.ui.enabled": {
+        "Value": false,
+        "Status": "locked"
+      }
     }
   }
 }

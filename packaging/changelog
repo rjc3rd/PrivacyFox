@@ -1,3 +1,15 @@
+privacyfox (0.1.2) unstable; urgency=medium
+
+  * Disable Waterfox's native ad-blocking engine entirely via policy
+    (waterfox.blocker.enabled/ui.enabled, locked false), in favor of
+    the force-installed uBlock Origin extension. Previously relied on
+    Waterfox's own automatic extension-conflict detection to sort
+    this out reactively after install, which left a leftover toolbar
+    indicator and an unexplained prompt. Fixing it at the policy
+    level, before first launch, is the correct root-cause fix.
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 09:58:48 -0500
+
 privacyfox (0.1.1) unstable; urgency=medium
 
   * Add Privacy Badger (jid1-MnnxcxisBPnSXQ@jetpack) as a 7th
