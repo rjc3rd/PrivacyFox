@@ -46,6 +46,27 @@ just configured the way it should have shipped in the first place.
   page after installing PrivacyFox and it will honestly say Waterfox, because it
   honestly still is — that's not a gap, it's the proof nothing was disguised.
 
+## Platform support
+
+**Right now: Debian/Ubuntu-family Linux, any desktop environment.** Nothing here
+is tied to Cinnamon, GTK, or any specific desktop/toolkit — the `.deb` installs
+fine under GNOME, KDE, XFCE, Cinnamon, whatever, since none of this touches the
+desktop environment at all. That's a real difference from this project's sibling,
+[PrivacyOS](https://privacyos.dev), which does have genuine Cinnamon-only pieces.
+
+What "Debian/Ubuntu-family" actually means here: the `.deb` package and
+`install.sh` both assume `apt`/`dpkg` and Linux filesystem paths
+(`/usr/lib/waterfox`, `~/.waterfox`). Other Linux families (Fedora, Arch,
+openSUSE, etc.) aren't supported yet — no RPM or equivalent exists — though
+nothing about the underlying approach rules it out, it just hasn't been built.
+
+**The config itself isn't actually Linux-specific.** `policies.json`,
+`PrivacyFox.js`, and `userContent.css` are all standard Gecko/Waterfox
+mechanisms that work identically on Windows and macOS — arkenfox and betterfox
+are themselves cross-platform projects. Someone on Windows or Mac could place
+these three files in their OS's equivalent locations by hand and get the same
+hardening; there's just no automated installer for those platforms yet.
+
 ## How it works
 
 Three files, none of which require touching Waterfox's own installation:
