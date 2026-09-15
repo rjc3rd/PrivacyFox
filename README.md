@@ -79,18 +79,27 @@ Three files, none of which require touching Waterfox's own installation:
 
 Two real ways to install this automatically, both in this repo:
 
-- **`.deb`**: `sudo apt install ./privacyfox_*.deb` (build it yourself with
-  `packaging/build-deb.sh`, or grab one from Releases once published), then run
-  `privacyfox-apply` once as yourself (no sudo — it only touches your own profile).
-  The split exists because Debian packaging rules don't let a package's install
-  step write into your home directory.
+- **`.deb`**: grab one from [Releases](https://github.com/rjc3rd/PrivacyFox/releases),
+  or build it yourself with `packaging/build-deb.sh`, then
+  `sudo apt install ./privacyfox_*.deb` and run `privacyfox-apply` once as
+  yourself (no sudo — it only touches your own profile). The split exists
+  because Debian packaging rules don't let a package's install step write
+  into your home directory. This path assumes Waterfox (and its APT repo)
+  is already set up, since it's a declared package dependency.
 - **`install.sh`**: `./install.sh` layers all three files directly onto an
-  existing Waterfox install/profile in one step, no packaging involved.
+  existing Waterfox install/profile in one step, no packaging involved. If
+  Waterfox itself isn't installed yet, it offers to add Waterfox's own
+  official APT repo and install it for you (only for OS/version
+  combinations verified against Waterfox's real repo listing — currently
+  Debian 13/sid and Ubuntu 22.04 through 26.04; anything else, it tells you
+  to install Waterfox yourself rather than guess a repo path that might be
+  wrong).
 
-Either way, Waterfox needs to already be installed — that's it. If you've never
-launched it before, both paths bootstrap a profile for you automatically (a
-brief headless launch just long enough to create one), and both launch
-Waterfox for real once done, hardened, so you see the result immediately.
+Either way, once Waterfox is present, no other manual step is needed. If
+you've never launched it before, both paths bootstrap a profile for you
+automatically (a brief headless launch just long enough to create one), and
+both launch Waterfox for real once done, hardened, so you see the result
+immediately.
 
 ## Credits & license
 

@@ -50,6 +50,79 @@ resolve_waterfox_install_dir() {
   return 1
 }
 
+# ---- 1b. Offer to install Waterfox itself, if it's missing -----------------
+# Only offers for OS/version combinations verified against Waterfox's own
+# real repo listing (waterfox.com/download) -- Debian 13 confirmed directly
+# against this machine's own working /etc/apt/sources.list.d/waterfox.list,
+# Ubuntu's xUbuntu_<version> naming confirmed from their docs. Notably,
+# Debian 12 is NOT in Waterfox's own supported list at all -- don't guess a
+# path for it or any other unlisted combination, just tell the user to
+# install it themselves rather than risk adding a wrong/broken repo.
+detect_waterfox_repo_path() {
+  [[ -f /etc/os-release ]] || return 1
+  local os_id="" codename="" version_id=""
+  # shellcheck disable=SC1091
+  . /etc/os-release
+  os_id="$ID"
+  codename="$VERSION_CODENAME"
+  version_id="$VERSION_ID"
+
+  case "$os_id" in
+    debian)
+      case "$codename" in
+        trixie) echo "Debian_13"; return 0 ;;
+        sid|unstable) echo "Debian_Unstable"; return 0 ;;
+      esac
+      ;;
+    ubuntu)
+      case "$version_id" in
+        22.04|24.04|24.10|25.04|25.10|26.04) echo "xUbuntu_${version_id}"; return 0 ;;
+      esac
+      ;;
+  esac
+  return 1
+}
+
+offer_install_waterfox() {
+  local repo_path
+  repo_path="$(detect_waterfox_repo_path)"
+  if [[ -z "$repo_path" ]]; then
+    warn "Waterfox isn't installed, and I don't have a verified repo path for"
+    warn "your specific OS/version. Install it yourself: https://www.waterfox.com/download/"
+    return 1
+  fi
+
+  echo
+  echo "Waterfox isn't installed. PrivacyFox can add Waterfox's own official"
+  echo "APT repo (download.opensuse.org/repositories/isv:/BrowserWorks/$repo_path/)"
+  echo "and install it for you -- needs sudo."
+  read -r -p "Proceed? [y/N] " reply
+  if [[ ! "$reply" =~ ^[Yy]$ ]]; then
+    warn "Skipped. Install Waterfox yourself, then re-run this script."
+    return 1
+  fi
+
+  local key_url="https://download.opensuse.org/repositories/isv:/BrowserWorks/${repo_path}/Release.key"
+  curl -fsSL "$key_url" | gpg --dearmor | sudo tee /usr/share/keyrings/waterfox.gpg > /dev/null
+  if [[ ! -s /usr/share/keyrings/waterfox.gpg ]]; then
+    warn "Couldn't fetch/import Waterfox's signing key."
+    return 1
+  fi
+
+  echo "deb [signed-by=/usr/share/keyrings/waterfox.gpg] https://download.opensuse.org/repositories/isv:/BrowserWorks/${repo_path}/ /" \
+    | sudo tee /etc/apt/sources.list.d/waterfox.list > /dev/null
+  if [[ ! -f /etc/apt/sources.list.d/waterfox.list ]]; then
+    warn "Couldn't write /etc/apt/sources.list.d/waterfox.list."
+    return 1
+  fi
+
+  sudo apt-get update || { warn "apt update failed"; return 1; }
+  sudo apt-get install -y waterfox || { warn "waterfox install failed"; return 1; }
+
+  info "Waterfox installed."
+  return 0
+}
+
 # ---- 2. Find the default profile directory ---------------------------------
 # Waterfox still uses the legacy ~/.waterfox path (not XDG) as of this
 # writing -- unlike LibreWolf/Firefox 147+, which fall back to
@@ -148,7 +221,12 @@ main() {
   local install_dir
   install_dir="$(resolve_waterfox_install_dir)"
   if [[ -z "$install_dir" ]]; then
-    die "Couldn't find a Waterfox install. Install Waterfox first (waterfox.net), then re-run this script."
+    if offer_install_waterfox; then
+      install_dir="$(resolve_waterfox_install_dir)"
+    fi
+  fi
+  if [[ -z "$install_dir" ]]; then
+    die "Couldn't find a Waterfox install."
   fi
   info "Found Waterfox install at $install_dir"
 
