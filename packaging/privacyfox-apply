@@ -19,7 +19,17 @@
 # If LibreWolf has never been launched before (no profile exists yet), this
 # bootstraps one itself -- a brief headless launch just long enough to
 # create it, then closes it again. No manual "open it once yourself" step
-# needed. On success, launches LibreWolf for real at the end, hardened.
+# needed.
+#
+# --revert undoes the profile side of things: restores the newest
+# pre-PrivacyFox backup of user.js/userContent.css (or removes the file
+# entirely if no backup exists, i.e. the profile had none before PrivacyFox
+# touched it). Run this BEFORE `sudo apt purge privacyfox`, not after --
+# purge removes this very command along with the rest of the package.
+# `sudo apt purge privacyfox` alone only undoes the system-wide policy
+# (Accounts, force-installed extensions); it can't reach into your profile
+# at all -- that's this command's job, same as applying was. --revert also
+# launches LibreWolf for real at the end, so you see stock behavior.
 
 set -uo pipefail
 
@@ -69,9 +79,49 @@ bootstrap_profile() {
   wait "$pid" 2>/dev/null || true
 }
 
+revert_profile() {
+  local profile_dir
+  profile_dir="$(resolve_default_profile_dir)"
+  [[ -n "$profile_dir" ]] || die "No LibreWolf profile found -- nothing to revert."
+  info "Found profile at $profile_dir"
+
+  local target="$profile_dir/user.js"
+  local latest_backup
+  latest_backup="$(ls -1t "$target".bak.* 2>/dev/null | head -n1 || true)"
+  if [[ -n "$latest_backup" ]]; then
+    mv "$latest_backup" "$target" || die "couldn't restore $latest_backup"
+    info "Restored user.js from $(basename "$latest_backup")"
+  elif [[ -f "$target" ]]; then
+    rm -f "$target" || warn "couldn't remove $target"
+    info "Removed user.js (no prior backup existed -- profile had none before PrivacyFox)"
+  else
+    info "No user.js present -- nothing to revert there."
+  fi
+
+  local css_target="$profile_dir/chrome/userContent.css"
+  local latest_css_backup
+  latest_css_backup="$(ls -1t "$css_target".bak.* 2>/dev/null | head -n1 || true)"
+  if [[ -n "$latest_css_backup" ]]; then
+    mv "$latest_css_backup" "$css_target" || warn "couldn't restore $latest_css_backup"
+    info "Restored userContent.css from $(basename "$latest_css_backup")"
+  elif [[ -f "$css_target" ]]; then
+    rm -f "$css_target" || warn "couldn't remove $css_target"
+    info "Removed userContent.css (no prior backup existed)"
+  fi
+
+  echo
+  info "Done. Profile reverted. Launching LibreWolf..."
+  setsid librewolf >/dev/null 2>&1 &
+}
+
 main() {
   if pgrep -x librewolf >/dev/null 2>&1 || pgrep -f '/librewolf$' >/dev/null 2>&1; then
-    die "LibreWolf is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this writes."
+    die "LibreWolf is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this command does."
+  fi
+
+  if [[ "${1:-}" == "--revert" ]]; then
+    revert_profile
+    return
   fi
 
   [[ -f "$SHARE_DIR/PrivacyFox.js" ]] || die "$SHARE_DIR/PrivacyFox.js not found -- is the privacyfox package actually installed?"
@@ -96,8 +146,12 @@ main() {
 
   if [[ -f "$SHARE_DIR/userContent.css" ]]; then
     mkdir -p "$profile_dir/chrome"
-    cp "$SHARE_DIR/userContent.css" "$profile_dir/chrome/userContent.css" \
-      && info "userContent.css installed to $profile_dir/chrome/userContent.css" \
+    local css_target="$profile_dir/chrome/userContent.css"
+    if [[ -f "$css_target" ]]; then
+      cp "$css_target" "$css_target.bak.$(date +%Y%m%d%H%M%S)" || warn "couldn't back up existing userContent.css"
+    fi
+    cp "$SHARE_DIR/userContent.css" "$css_target" \
+      && info "userContent.css installed to $css_target" \
       || warn "couldn't install userContent.css"
   fi
 

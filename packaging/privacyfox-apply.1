@@ -1,8 +1,11 @@
-.TH PRIVACYFOX-APPLY 1 "September 2026" "privacyfox 0.2.0" "User Commands"
+.TH PRIVACYFOX-APPLY 1 "September 2026" "privacyfox 0.3.0" "User Commands"
 .SH NAME
-privacyfox-apply \- apply PrivacyFox's hardened profile to your LibreWolf install
+privacyfox-apply \- apply or revert PrivacyFox's hardened profile on your LibreWolf install
 .SH SYNOPSIS
 .B privacyfox-apply
+.br
+.B privacyfox-apply
+.B \-\-revert
 .SH DESCRIPTION
 .B privacyfox-apply
 finishes the setup that the
@@ -70,6 +73,30 @@ skipped silently if absent.
 .IP \(bu 2
 On success, launches LibreWolf for real, so you see the hardened
 result immediately.
+.SH THE \-\-REVERT FLAG
+.B "privacyfox-apply --revert"
+undoes the profile side of things:
+.I user.js
+and
+.I userContent.css
+are restored from the newest pre-PrivacyFox backup found in the
+profile, or removed outright if no backup exists (meaning the profile
+had neither file before PrivacyFox ever touched it). LibreWolf is
+then launched again so you can confirm stock behavior directly.
+.PP
+This is the counterpart to
+.BR "sudo apt purge privacyfox" ,
+which only undoes the system-wide side (the policy file and its
+force-installed extensions) \- it has no access to your profile at
+all, the same restriction that keeps the initial apply step out of
+.B postinst
+in the first place. Run
+.B "privacyfox-apply --revert"
+.I before
+.BR "sudo apt purge privacyfox" ,
+not after: purge removes this very command along with the rest of the
+package, so reversing the order leaves the profile stuck hardened
+with no way to revert it short of restoring a manual backup.
 .SH EXIT STATUS
 .TP
 .B 0
@@ -100,6 +127,13 @@ directory. Not written to.
 Overwritten with the content of
 .I PrivacyFox.js
 each run, after a timestamped backup.
+.TP
+.I <profile>/user.js.bak.<timestamp>
+.RI "and " <profile>/chrome/userContent.css.bak.<timestamp>
+Backups created before each overwrite. Consumed (renamed back, not
+copied) by
+.BR "--revert" ,
+newest first.
 .SH NOTES
 Safe to re-run at any time, including after
 .B "apt upgrade privacyfox"
@@ -113,10 +147,11 @@ the previous version first.
 .BR librewolf (1),
 .I policies.json
 at
-.IR /usr/share/librewolf/distribution/policies.json ,
+.IR /etc/librewolf/policies/policies.json ,
 installed by the
 .B privacyfox
-package itself.
+package itself, and removed again on
+.BR "apt purge privacyfox" .
 .PP
 Full source, credits, and documentation:
 .UR https://github.com/rjc3rd/PrivacyFox

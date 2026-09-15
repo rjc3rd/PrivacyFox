@@ -146,14 +146,20 @@ real one, regardless of which profile you're actively testing against.
 
 **Changed your mind? Uninstall cleanly:**
 ```
+privacyfox-apply --revert
 sudo apt purge privacyfox
 ```
-This deletes the system `policies.json` and any backups — Accounts is no
-longer disabled by policy, and the extensions stop being centrally managed.
-One thing purge deliberately can't reach: the hardening already written into
-your profile's `user.js` by `privacyfox-apply` — that's outside the
-package's control entirely, and stays in place until you edit it yourself
-or restore an earlier profile backup (the same `mv` trick above, in reverse).
+Order matters — run `--revert` first. `sudo apt purge` only undoes the
+system-wide side (deletes `policies.json` and any backups — Accounts is no
+longer disabled by policy, and the extensions stop being centrally managed),
+since a root-run maintainer script can't reach into your `$HOME` any more
+than `postinst` could when installing it. `--revert` is the profile-side
+counterpart: it restores the newest pre-PrivacyFox backup of `user.js` and
+`userContent.css` (made automatically on every `privacyfox-apply` run), or
+removes the file outright if no backup exists — i.e. that profile had
+neither file before PrivacyFox touched it. Run it *before* purging, not
+after: purge removes the `privacyfox-apply` command itself along with the
+rest of the package.
 
 ## Credits & license
 

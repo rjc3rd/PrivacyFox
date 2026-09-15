@@ -1,3 +1,31 @@
+privacyfox (0.3.0) unstable; urgency=medium
+
+  * Added `privacyfox-apply --revert`. Confirmed via real testing that
+    `sudo apt purge privacyfox` only undoes the system-wide side (policy
+    file, force-installed extensions) -- it can't touch the profile's
+    user.js/userContent.css at all, since those live in $HOME and purge
+    runs as root with no user session, same restriction that keeps the
+    original apply step out of postinst in the first place.
+
+    --revert restores the newest pre-PrivacyFox backup of user.js and
+    userContent.css (already being made on every apply run, just never
+    used until now), or removes the file entirely if no backup exists --
+    i.e. the profile had neither before PrivacyFox touched it. Tested
+    both cases against a fake profile before trusting it: real backup
+    restored correctly, no-backup case removes cleanly, no leftover
+    .bak files after either.
+
+    Correct full-uninstall order documented everywhere it matters:
+    `privacyfox-apply --revert` first, then `sudo apt purge privacyfox`
+    -- purge removes privacyfox-apply itself along with the rest of the
+    package, so running it first would leave the profile stuck.
+
+  * Apply step now also backs up an existing userContent.css before
+    overwriting it, matching the user.js behavior exactly (this gap is
+    what made revert's userContent.css restoration possible at all).
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 14:20:03 -0500
+
 privacyfox (0.2.1) unstable; urgency=high
 
   * Real correctness bug found and fixed, worked through together:
