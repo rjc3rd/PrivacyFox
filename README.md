@@ -15,7 +15,10 @@ just configured the way it should have shipped in the first place.
 
 - **No Account & Sync nagging.** Disabled at the policy level
   (`DisableFirefoxAccounts`), not just hidden — the feature is off, not painted over.
-- **No default-browser check/nag.** `DontCheckDefaultBrowser`, same deal.
+- **No unsolicited default-browser nagging.** `DontCheckDefaultBrowser` stops
+  Waterfox from checking and prompting on every startup — it doesn't remove your
+  ability to actually set it as your default. That button stays right where it is
+  in Settings for anyone who wants to use it; we just don't nag you about it.
 - **No partner-ad carve-out in the built-in blocker.** Waterfox's own blocker ships
   with an option to let *paid search partners* through even while blocking
   everything else — the exact thing an ad blocker shouldn't offer. Off by default,
