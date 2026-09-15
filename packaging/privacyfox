@@ -1,35 +1,34 @@
 #!/usr/bin/env bash
 #
-# privacyfox-apply
+# privacyfox
 #
-# Run this once, as yourself (no sudo), after installing the `privacyfox`
-# package. The package itself already installed policies.json system-wide
-# during `apt install` -- this command does the one remaining piece that
-# has to run as a real user: dropping the hardened user.js (and
-# userContent.css) into your actual LibreWolf profile.
+# privacyfox --apply
+#   Run this once, as yourself (no sudo), after installing the `privacyfox`
+#   package. The package itself already installed policies.json system-wide
+#   during `apt install` -- this does the one remaining piece that has to
+#   run as a real user: dropping the hardened user.js (and userContent.css)
+#   into your actual LibreWolf profile. Safe to re-run any time (e.g. after
+#   `apt upgrade privacyfox` ships an updated PrivacyFox.js) -- backs up
+#   whatever's already there first. If LibreWolf has never been launched
+#   before (no profile exists yet), this bootstraps one itself -- a brief
+#   headless launch just long enough to create it, then closes it again.
 #
-# Why this isn't done automatically by the package: Debian packaging rules
-# don't allow postinst scripts (which run as root, at install time, with no
-# specific user session) to write into a user's $HOME -- profile setup has
-# to be a separate, per-user step, run by that user.
+# privacyfox --revert
+#   Undoes the profile side of things: restores the newest pre-PrivacyFox
+#   backup of user.js/userContent.css (or removes the file entirely if no
+#   backup exists, i.e. the profile had none before PrivacyFox touched it).
+#   Run this BEFORE `sudo apt purge privacyfox`, not after -- purge removes
+#   this very command along with the rest of the package. Purge alone only
+#   undoes the system-wide policy (Accounts, force-installed extensions);
+#   it can't reach into your profile at all -- that's this command's job.
 #
-# Safe to re-run any time (e.g. after `apt upgrade privacyfox` ships an
-# updated PrivacyFox.js) -- backs up whatever's already there first.
+# Why the profile side isn't handled automatically by the package: Debian
+# packaging rules don't allow postinst/postrm scripts (which run as root,
+# with no specific user session) to write into a user's $HOME -- that has
+# to be a separate, per-user step, run by that user, either direction.
 #
-# If LibreWolf has never been launched before (no profile exists yet), this
-# bootstraps one itself -- a brief headless launch just long enough to
-# create it, then closes it again. No manual "open it once yourself" step
-# needed.
-#
-# --revert undoes the profile side of things: restores the newest
-# pre-PrivacyFox backup of user.js/userContent.css (or removes the file
-# entirely if no backup exists, i.e. the profile had none before PrivacyFox
-# touched it). Run this BEFORE `sudo apt purge privacyfox`, not after --
-# purge removes this very command along with the rest of the package.
-# `sudo apt purge privacyfox` alone only undoes the system-wide policy
-# (Accounts, force-installed extensions); it can't reach into your profile
-# at all -- that's this command's job, same as applying was. --revert also
-# launches LibreWolf for real at the end, so you see stock behavior.
+# Both modes launch LibreWolf for real at the end, so you see the result
+# immediately.
 
 set -uo pipefail
 
@@ -38,6 +37,23 @@ SHARE_DIR="/usr/share/privacyfox"
 warn() { echo "[privacyfox] WARNING: $*" >&2; }
 die()  { echo "[privacyfox] ERROR: $*" >&2; exit 1; }
 info() { echo "[privacyfox] $*"; }
+usage() {
+  cat <<'EOF' >&2
+Usage: privacyfox --apply | --revert
+
+  --apply    Drop the hardened user.js (and userContent.css) into your
+             LibreWolf profile. Run this once after installing the
+             privacyfox package. Safe to re-run any time, e.g. after
+             an updated PrivacyFox.js ships in an apt upgrade.
+
+  --revert   Undo the --apply above: restore your profile's original
+             user.js/userContent.css from backup (or remove them, if
+             the profile had none before). Run this BEFORE
+             `sudo apt purge privacyfox`, not after -- purge removes
+             this very command.
+EOF
+  exit "${1:-1}"
+}
 
 # LibreWolf (Firefox 147+ base) falls back to ~/.config/librewolf/librewolf
 # via XDG Base Directory support, but ONLY when the legacy ~/.librewolf
@@ -114,16 +130,7 @@ revert_profile() {
   setsid librewolf >/dev/null 2>&1 &
 }
 
-main() {
-  if pgrep -x librewolf >/dev/null 2>&1 || pgrep -f '/librewolf$' >/dev/null 2>&1; then
-    die "LibreWolf is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this command does."
-  fi
-
-  if [[ "${1:-}" == "--revert" ]]; then
-    revert_profile
-    return
-  fi
-
+apply_profile() {
   [[ -f "$SHARE_DIR/PrivacyFox.js" ]] || die "$SHARE_DIR/PrivacyFox.js not found -- is the privacyfox package actually installed?"
 
   local profile_dir
@@ -158,6 +165,24 @@ main() {
   echo
   info "Done. Launching LibreWolf..."
   setsid librewolf >/dev/null 2>&1 &
+}
+
+main() {
+  case "${1:-}" in
+    --apply|--revert) ;;
+    ""|-h|--help) usage 0 ;;
+    *) usage 1 ;;
+  esac
+
+  if pgrep -x librewolf >/dev/null 2>&1 || pgrep -f '/librewolf$' >/dev/null 2>&1; then
+    die "LibreWolf is currently running. Close it first -- it rewrites user.js/prefs.js on exit and would overwrite what this command does."
+  fi
+
+  if [[ "$1" == "--revert" ]]; then
+    revert_profile
+  else
+    apply_profile
+  fi
 }
 
 main "$@"

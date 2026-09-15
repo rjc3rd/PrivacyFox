@@ -2,8 +2,8 @@
 # postinst for the privacyfox package -- runs as root, at install time.
 # Fixed interpreter path (not /usr/bin/env) -- maintainer scripts need a
 # known, direct interpreter, not an env-indirected one.
-# Only touches system paths, deliberately never $HOME (see privacyfox-apply
-# for why that split exists).
+# Only touches system paths, deliberately never $HOME (see privacyfox
+# --apply for why that split exists).
 
 set -euo pipefail
 
@@ -35,7 +35,7 @@ cp "$SHARE_DIR/distribution/policies.json" "$TARGET" \
 
 echo
 info "System-wide setup done. Each user who wants PrivacyFox's hardened"
-info "profile settings should now run:  privacyfox-apply"
+info "profile settings should now run:  privacyfox --apply"
 info "(no sudo needed for that step -- it only touches your own profile)"
 
 exit 0

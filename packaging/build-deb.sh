@@ -34,10 +34,10 @@ if [[ -f "$REPO_ROOT/userContent.css" ]]; then
 fi
 
 # --- the per-user command ----------------------------------------------------
-install -m 0755 "$SCRIPT_DIR/privacyfox-apply" "$PKG_ROOT/usr/bin/privacyfox-apply"
+install -m 0755 "$SCRIPT_DIR/privacyfox" "$PKG_ROOT/usr/bin/privacyfox"
 
 # --- man page (gzip -9n, Debian convention -- no name/timestamp for reproducible builds) --
-gzip -9n -c "$SCRIPT_DIR/privacyfox-apply.1" > "$PKG_ROOT/usr/share/man/man1/privacyfox-apply.1.gz"
+gzip -9n -c "$SCRIPT_DIR/privacyfox.1" > "$PKG_ROOT/usr/share/man/man1/privacyfox.1.gz"
 
 # --- doc: copyright + changelog (required for a native package) -------------
 install -m 0644 "$SCRIPT_DIR/copyright" "$PKG_ROOT/usr/share/doc/privacyfox/copyright"
@@ -54,7 +54,7 @@ install -m 0755 "$SCRIPT_DIR/postrm" "$PKG_ROOT/DEBIAN/postrm"
 # effect at the point this script is read, so enforce explicitly too.
 find "$PKG_ROOT" -mindepth 1 -type d -exec chmod 0755 {} +
 find "$PKG_ROOT" -mindepth 1 -type f -not -path "*/DEBIAN/*" -exec chmod 0644 {} +
-chmod 0755 "$PKG_ROOT/usr/bin/privacyfox-apply" "$PKG_ROOT/DEBIAN/postinst" "$PKG_ROOT/DEBIAN/postrm"
+chmod 0755 "$PKG_ROOT/usr/bin/privacyfox" "$PKG_ROOT/DEBIAN/postinst" "$PKG_ROOT/DEBIAN/postrm"
 
 # Installed-Size is a real, expected control field (kB, best-effort estimate)
 size_kb="$(du -sk "$PKG_ROOT" | cut -f1)"

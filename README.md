@@ -107,8 +107,8 @@ Two real ways to install this automatically, both in this repo:
 
 - **`.deb`**: grab one from [Releases](https://github.com/rjc3rd/PrivacyFox/releases),
   or build it yourself with `packaging/build-deb.sh`, then
-  `sudo apt install ./privacyfox_*.deb` and run `privacyfox-apply` once as
-  yourself (no sudo — it only touches your own profile). The split exists
+  `sudo apt install ./privacyfox_*.deb` and run `privacyfox --apply` once
+  as yourself (no sudo — it only touches your own profile). The split exists
   because Debian packaging rules don't let a package's install step write
   into your home directory. This path assumes LibreWolf (and its APT repo)
   is already set up, since it's a declared package dependency.
@@ -146,7 +146,7 @@ real one, regardless of which profile you're actively testing against.
 
 **Changed your mind? Uninstall cleanly:**
 ```
-privacyfox-apply --revert
+privacyfox --revert
 sudo apt purge privacyfox
 ```
 Order matters — run `--revert` first. `sudo apt purge` only undoes the
@@ -155,10 +155,10 @@ longer disabled by policy, and the extensions stop being centrally managed),
 since a root-run maintainer script can't reach into your `$HOME` any more
 than `postinst` could when installing it. `--revert` is the profile-side
 counterpart: it restores the newest pre-PrivacyFox backup of `user.js` and
-`userContent.css` (made automatically on every `privacyfox-apply` run), or
+`userContent.css` (made automatically on every `privacyfox --apply` run), or
 removes the file outright if no backup exists — i.e. that profile had
 neither file before PrivacyFox touched it. Run it *before* purging, not
-after: purge removes the `privacyfox-apply` command itself along with the
+after: purge removes the `privacyfox` command itself along with the
 rest of the package.
 
 ## Credits & license

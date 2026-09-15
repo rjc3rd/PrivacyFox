@@ -1,5 +1,5 @@
 Package: privacyfox
-Version: 0.3.0
+Version: 0.3.1
 Section: web
 Priority: optional
 Architecture: all
@@ -12,10 +12,11 @@ Description: Hardening config layer for LibreWolf
  .
  This package installs a policies.json (disables Firefox Accounts/Sync,
  force-installs a curated set of privacy extensions alongside LibreWolf's
- own default uBlock Origin) and provides the privacyfox-apply command,
- which each user runs once to drop a hardening user.js -- properly diffed
- against LibreWolf's own real defaults, not blindly layered on top -- into
- their own profile.
+ own default uBlock Origin) and provides the privacyfox command
+ (privacyfox --apply / --revert), which each user runs once to drop a
+ hardening user.js -- properly diffed against LibreWolf's own real
+ defaults, not blindly layered on top -- into their own profile, or undo
+ it again.
  .
  See https://privacyfox.dev and https://github.com/rjc3rd/PrivacyFox for
  full details and credits.

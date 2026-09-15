@@ -1,3 +1,22 @@
+privacyfox (0.3.1) unstable; urgency=low
+
+  * Renamed the command from `privacyfox-apply` to `privacyfox`, caught
+    before the v0.3.0 release was ever actually run by a user -- with
+    --revert now a real second mode, "-apply" as a suffix was no longer
+    an accurate name for what the command does as a whole.
+
+  * Both modes are now explicit flags rather than "no args = apply":
+    `privacyfox --apply` and `privacyfox --revert`. Bare `privacyfox`
+    (or `-h`/`--help`) prints a real usage summary of both and exits 0;
+    an unrecognized flag prints the same summary and exits 1.
+
+  * v0.3.0 was published and then superseded within the same session,
+    before any real-world install of it -- no migration path needed for
+    the old privacyfox-apply name, since nothing ever shipped depending
+    on it existing.
+
+ -- PrivacyFox Project <hello@privacyfox.dev>  Tue, 15 Sep 2026 14:25:56 -0500
+
 privacyfox (0.3.0) unstable; urgency=medium
 
   * Added `privacyfox-apply --revert`. Confirmed via real testing that

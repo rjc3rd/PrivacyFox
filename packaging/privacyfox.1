@@ -1,20 +1,22 @@
-.TH PRIVACYFOX-APPLY 1 "September 2026" "privacyfox 0.3.0" "User Commands"
+.TH PRIVACYFOX 1 "September 2026" "privacyfox 0.3.1" "User Commands"
 .SH NAME
-privacyfox-apply \- apply or revert PrivacyFox's hardened profile on your LibreWolf install
+privacyfox \- apply or revert PrivacyFox's hardened profile on your LibreWolf install
 .SH SYNOPSIS
-.B privacyfox-apply
+.B privacyfox
+.B \-\-apply
 .br
-.B privacyfox-apply
+.B privacyfox
 .B \-\-revert
 .SH DESCRIPTION
-.B privacyfox-apply
+.B privacyfox
 finishes the setup that the
 .B privacyfox
 package's install step can't safely do itself. Installing the package
 already drops
-.I distribution/policies.json
-into LibreWolf's system install directory \- that part runs as root,
-during
+.I policies.json
+into
+.IR /etc/librewolf/policies/ .
+That part runs as root, during
 .BR "apt install" ,
 and needs no further action.
 
@@ -23,11 +25,13 @@ profile: Debian packaging rules don't allow a
 .B postinst
 maintainer script (which runs as root, with no specific user session)
 to write into a user's home directory. That's the one remaining piece
-.B privacyfox-apply
+.B privacyfox
 does, run once by you, as yourself, with no
-.BR sudo .
-
-Specifically, each run:
+.BR sudo ,
+either direction \- applying or reverting.
+.SH "\-\-APPLY"
+.B "privacyfox --apply"
+does the following, each run:
 .IP \(bu 2
 Refuses to proceed if LibreWolf is currently running, since LibreWolf
 rewrites
@@ -50,9 +54,11 @@ once yourself" step needed first.
 .IP \(bu 2
 Backs up any existing
 .I user.js
-in that profile to a timestamped
-.I user.js.bak.<timestamp>
-file before overwriting it.
+and
+.I userContent.css
+in that profile to timestamped
+.I .bak.<timestamp>
+files before overwriting either.
 .IP \(bu 2
 Copies the hardening file
 .RI ( PrivacyFox.js ,
@@ -73,8 +79,17 @@ skipped silently if absent.
 .IP \(bu 2
 On success, launches LibreWolf for real, so you see the hardened
 result immediately.
-.SH THE \-\-REVERT FLAG
-.B "privacyfox-apply --revert"
+.PP
+Safe to re-run at any time, including after
+.B "apt upgrade privacyfox"
+ships an updated
+.IR PrivacyFox.js .
+Each run simply refreshes
+.I user.js
+from whatever the currently installed package contains, backing up
+the previous version first.
+.SH "\-\-REVERT"
+.B "privacyfox --revert"
 undoes the profile side of things:
 .I user.js
 and
@@ -88,10 +103,12 @@ This is the counterpart to
 .BR "sudo apt purge privacyfox" ,
 which only undoes the system-wide side (the policy file and its
 force-installed extensions) \- it has no access to your profile at
-all, the same restriction that keeps the initial apply step out of
+all, the same restriction that keeps
+.B "\-\-apply"
+out of
 .B postinst
 in the first place. Run
-.B "privacyfox-apply --revert"
+.B "privacyfox --revert"
 .I before
 .BR "sudo apt purge privacyfox" ,
 not after: purge removes this very command along with the rest of the
@@ -100,11 +117,19 @@ with no way to revert it short of restoring a manual backup.
 .SH EXIT STATUS
 .TP
 .B 0
-Applied successfully.
+Succeeded, or bare
+.B privacyfox
+/
+.B \-\-help
+printed usage and exited without error.
 .TP
 .B 1
-LibreWolf was running, no LibreWolf profile could be found or
-created, or the
+An unrecognized flag was given, LibreWolf was running, no LibreWolf
+profile could be found or created (on
+.BR \-\-apply ),
+no profile existed at all (on
+.BR \-\-revert ),
+or the
 .B privacyfox
 package's files weren't present at
 .IR /usr/share/privacyfox/ .
@@ -112,7 +137,9 @@ The error message printed explains which.
 .SH FILES
 .TP
 .I /usr/share/privacyfox/PrivacyFox.js
-The hardening file this command copies into your profile.
+The hardening file
+.B \-\-apply
+copies into your profile.
 .TP
 .I /usr/share/privacyfox/userContent.css
 The optional cosmetic cleanup file, if shipped.
@@ -126,23 +153,17 @@ directory. Not written to.
 .I <profile>/user.js
 Overwritten with the content of
 .I PrivacyFox.js
+by
+.BR \-\-apply ,
 each run, after a timestamped backup.
 .TP
 .I <profile>/user.js.bak.<timestamp>
 .RI "and " <profile>/chrome/userContent.css.bak.<timestamp>
-Backups created before each overwrite. Consumed (renamed back, not
-copied) by
-.BR "--revert" ,
+Backups created before each
+.B \-\-apply
+overwrite. Consumed (renamed back, not copied) by
+.BR \-\-revert ,
 newest first.
-.SH NOTES
-Safe to re-run at any time, including after
-.B "apt upgrade privacyfox"
-ships an updated
-.IR PrivacyFox.js .
-Each run simply refreshes
-.I user.js
-from whatever the currently installed package contains, backing up
-the previous version first.
 .SH SEE ALSO
 .BR librewolf (1),
 .I policies.json
