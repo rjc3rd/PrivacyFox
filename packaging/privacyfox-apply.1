@@ -1,0 +1,104 @@
+.TH PRIVACYFOX-APPLY 1 "September 2026" "privacyfox 0.1.1" "User Commands"
+.SH NAME
+privacyfox-apply \- apply PrivacyFox's hardened profile to your Waterfox install
+.SH SYNOPSIS
+.B privacyfox-apply
+.SH DESCRIPTION
+.B privacyfox-apply
+finishes the setup that the
+.B privacyfox
+package's install step can't safely do itself. Installing the package
+already drops
+.I distribution/policies.json
+into Waterfox's system install directory \- that part runs as root,
+during
+.BR "apt install" ,
+and needs no further action.
+
+What it can't do at install time is touch your personal Waterfox
+profile: Debian packaging rules don't allow a
+.B postinst
+maintainer script (which runs as root, with no specific user session)
+to write into a user's home directory. That's the one remaining piece
+.B privacyfox-apply
+does, run once by you, as yourself, with no
+.BR sudo .
+
+Specifically, each run:
+.IP \(bu 2
+Refuses to proceed if Waterfox is currently running, since Waterfox
+rewrites
+.I user.js
+and
+.I prefs.js
+on exit and would silently overwrite what this command just wrote.
+.IP \(bu 2
+Locates your default Waterfox profile via
+.IR ~/.waterfox/profiles.ini .
+.IP \(bu 2
+Backs up any existing
+.I user.js
+in that profile to a timestamped
+.I user.js.bak.<timestamp>
+file before overwriting it.
+.IP \(bu 2
+Copies the merged Arkenfox + Betterfox hardening file
+.RI ( PrivacyFox.js ,
+shipped by the package at
+.IR /usr/share/privacyfox/PrivacyFox.js )
+into the profile as
+.IR user.js .
+.IP \(bu 2
+Copies
+.I userContent.css
+into the profile's
+.I chrome/
+directory, if the package ships one \- purely cosmetic vendor-UI
+cleanup, skipped silently if absent.
+.SH EXIT STATUS
+.TP
+.B 0
+Applied successfully.
+.TP
+.B 1
+Waterfox was running, no Waterfox profile could be found, or the
+.B privacyfox
+package's files weren't present at
+.IR /usr/share/privacyfox/ .
+The error message printed explains which.
+.SH FILES
+.TP
+.I /usr/share/privacyfox/PrivacyFox.js
+The hardening file this command copies into your profile.
+.TP
+.I /usr/share/privacyfox/userContent.css
+The optional cosmetic cleanup file, if shipped.
+.TP
+.I ~/.waterfox/profiles.ini
+Read to find your default profile directory. Not written to.
+.TP
+.I ~/.waterfox/<profile>/user.js
+Overwritten with the content of
+.I PrivacyFox.js
+each run, after a timestamped backup.
+.SH NOTES
+Safe to re-run at any time, including after
+.B "apt upgrade privacyfox"
+ships an updated
+.IR PrivacyFox.js .
+Each run simply refreshes
+.I user.js
+from whatever the currently installed package contains, backing up
+the previous version first.
+.SH SEE ALSO
+.BR waterfox (1),
+.I policies.json
+at
+.IR /usr/lib/waterfox/distribution/policies.json ,
+installed by the
+.B privacyfox
+package itself.
+.PP
+Full source, credits, and documentation:
+.UR https://github.com/rjc3rd/PrivacyFox
+.UE

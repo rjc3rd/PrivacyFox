@@ -23,6 +23,7 @@ umask 022
 mkdir -p "$PKG_ROOT/DEBIAN"
 mkdir -p "$PKG_ROOT/usr/share/privacyfox/distribution"
 mkdir -p "$PKG_ROOT/usr/share/doc/privacyfox"
+mkdir -p "$PKG_ROOT/usr/share/man/man1"
 mkdir -p "$PKG_ROOT/usr/bin"
 
 # --- payload, pulled straight from the repo root (single source of truth) --
@@ -34,6 +35,9 @@ fi
 
 # --- the per-user command ----------------------------------------------------
 install -m 0755 "$SCRIPT_DIR/privacyfox-apply" "$PKG_ROOT/usr/bin/privacyfox-apply"
+
+# --- man page (gzip -9n, Debian convention -- no name/timestamp for reproducible builds) --
+gzip -9n -c "$SCRIPT_DIR/privacyfox-apply.1" > "$PKG_ROOT/usr/share/man/man1/privacyfox-apply.1.gz"
 
 # --- doc: copyright + changelog (required for a native package) -------------
 install -m 0644 "$SCRIPT_DIR/copyright" "$PKG_ROOT/usr/share/doc/privacyfox/copyright"
